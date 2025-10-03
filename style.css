@@ -1,100 +1,67 @@
+:root{
+  --bg:#0b0e13; --card:#11151d; --ink:#e6e6e6; --muted:#96a0b3;
+  --accent:#304ffe; --accent-2:#6ee7ff;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --radius: 18px;
+}
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:#0b0e13;color:#e6e6e6;font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial}
-.wrap{height:100%;display:flex;align-items:center;justify-content:center;padding:10px}
+html,body{height:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font:16px/1.55 system-ui, -apple-system, Segoe UI, Roboto;
+}
+#app{ max-width:1200px; margin:24px auto; padding:0 16px;}
+.stage{ display:grid; grid-template-columns: 1fr 420px; gap:24px; }
+.pane .card{ background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.02)), var(--card);
+  border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; position:relative; }
 
-.board{
-  width: min(1100px, 100%);
-  height: min(560px, 70vh);
-  display:grid;
-  grid-template-columns: 2fr 1.1fr;
-  gap:12px;
-}
+#desc{ min-height:520px; display:flex; flex-direction:column; }
+#bg{ position:absolute; inset:0; background:#0b0e13 center/cover no-repeat; opacity:.35; filter:contrast(1.05) saturate(.9); }
+#desc .text{ position:relative; padding:24px 26px 28px; font-size:18px; min-height:160px; }
 
-.desc{
-  position:relative;
-  height:100%;
-  padding:14px;
-  border-radius:18px;
-  background: rgba(12,15,22,.55);
-  border:1px solid rgba(255,255,255,.06);
-  backdrop-filter: blur(6px);
-  overflow:hidden;
+.hud{ position:absolute; right:16px; bottom:16px; display:flex; gap:10px; }
+.pill{
+  appearance:none; border:0; padding:10px 14px; border-radius:999px;
+  background:#1b2230; color:var(--ink); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+  cursor:pointer; transition: .2s transform, .2s background;
 }
-.desc::before{
-  content:"";
-  position:absolute; inset:0;
-  background-size:cover;
-  background-position:center;
-  opacity:.95; /* фон виден, но читаем текст */
-  z-index:0;
-}
-.desc .text{
-  position:relative; z-index:1;
-  font-size:16px; line-height:1.55;
-  white-space:pre-wrap;
-  max-height:100%;
-  overflow:auto;
-  padding-right:4px;
-}
-.hud-row{
-  position:absolute; right:12px; bottom:12px; z-index:2;
-  display:flex; gap:8px;
-}
-.mini{
-  appearance:none; border:0; border-radius:12px;
-  padding:8px 10px; font-weight:600; cursor:pointer;
-  background:#1c2636; color:#fff;
-  border:1px solid rgba(255,255,255,.08);
-}
-.overlay{
-  position:absolute; inset:0; background:rgba(8,10,16,.6);
-  backdrop-filter: blur(2px);
-  display:flex; align-items:center; justify-content:center;
-}
-.overlay.hidden{display:none}
-.panel{width:min(360px,90%); max-height:70%; overflow:auto;
-  background:#111826; border:1px solid rgba(255,255,255,.06);
-  border-radius:14px; padding:12px}
-.panel .title{font-weight:700;margin-bottom:8px;opacity:.9}
-.panel ul{margin:0;padding-left:16px}
+.pill:hover{ transform:translateY(-1px); background:#232c3e; }
+.pill-quiet{ opacity:.7 }
+.pill-quiet:hover{ opacity:1 }
 
-.options{
-  height:100%;
-  border-radius:18px;
-  background: rgba(12,15,22,.55);
-  border:1px solid rgba(255,255,255,.06);
-  backdrop-filter: blur(6px);
-  padding:12px;
+.stack{ display:flex; flex-direction:column; gap:12px; }
+.option{
+  display:block; padding:18px 20px; border-radius:var(--radius);
+  background:#161b25; box-shadow:var(--shadow); border:1px solid rgba(255,255,255,.06);
+  cursor:pointer; transition:.2s transform, .2s background, .2s border-color, .2s opacity;
 }
-.opts{display:flex; flex-direction:column; gap:10px; height:100%; overflow:auto}
-.btn{
-  appearance:none; border:0; border-radius:14px;
-  padding:14px; text-align:left; font-weight:700; cursor:pointer;
-  background:#202a3e; color:#fff;
-  border:1px solid rgba(255,255,255,.07);
-  transition: transform .2s ease, opacity .2s;
-}
-.btn:hover{transform: translateY(-1px)}
-.btn.extra{outline:2px solid #8ab4ff;}
-.btn.spend{outline:2px solid #ffd257;}
-.btn.selected{transform:scale(1.03); box-shadow:0 8px 24px rgba(0,0,0,.35)}
-.btn.fadeout{opacity:0}
-.btn.fadein{animation:fadein .6s ease forwards; opacity:0}
+.option:hover{ transform:translateY(-2px); background:#1b2230; }
+.option.req{ border-color: rgba(48,79,254,.45); }
+.option.disabled{ display:none; } /* скрываем недоступные, как просил */
 
-@keyframes fadein{to{opacity:1}}
+dialog{ border:0; border-radius:14px; background:#0f141d; color:var(--ink); padding:0; box-shadow:var(--shadow); }
+dialog::backdrop{ background:rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+dialog .dlg-body{ padding:20px 22px 12px; min-width:300px; }
+dialog .close{ position:absolute; right:6px; top:6px; border:0; background:transparent; color:var(--muted); font-size:18px; cursor:pointer;}
 
-@media (max-width:980px){
-  .board{height:72vh; grid-template-columns: 1.6fr 1fr}
-  .desc .text{font-size:15px}
+@media (max-width: 980px){
+  .stage{ grid-template-columns:1fr; }
 }
 
-/* Моргание */
-.blink{position:fixed; inset:0; pointer-events:none; z-index:50}
-.blink.hidden{display:none}
-.blink .lid{position:absolute; left:0; right:0; height:50%; background:#0b0e13}
-.blink .top{top:-50%}
-.blink .bottom{bottom:-50%}
-.blink.active .top{animation:lidDown .35s ease forwards}
-.blink.active .bottom{animation:lidUp .35s ease forwards}
-@keyframes lidDown{to{top:0}}
-@keyframes lidUp{to{bottom:0}}
+/* ===== Анимации выбора и появления ===== */
+.option.enter { animation: fade-in-up .28s ease both; }
+.options-exit .option:not(.chosen) { animation: fade-out .22s ease forwards; }
+.option.chosen { animation: bump .16s ease both, fly-out .34s .18s ease forwards; }
+
+@keyframes fade-in-up { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+@keyframes fade-out    { to   { opacity:0; transform:translateY(-4px) } }
+@keyframes bump        { from { transform:scale(1) } to { transform:scale(1.05) } }
+@keyframes fly-out     { to   { transform:translateX(42px); opacity:0 } }
+
+/* ===== «Веки» для моргания ===== */
+.eyelid{ position:fixed; left:0; right:0; height:0; background:#000; z-index:9999; transition:height .18s ease; pointer-events:none; }
+.eyelid.top{ top:0 } .eyelid.bot{ bottom:0 }
+
+/* ===== Тайпрайтер текста ===== */
+.typewriter { display:inline; }
+.typewriter.done { display:inline; }
