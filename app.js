@@ -1,209 +1,114 @@
-// Telegram WebApp (не обязателен для сайта, но не мешает)
-const tg = window.Telegram?.WebApp;
-tg?.expand();
+let scenes = {};
+let currentScene = "start";
+let inventory = {};
+let flags = {};
 
-const state = {
-  scenes: {},
-  current: "start",
-  flags: {},
-  inv: {},        // { item: count }
-  lastImg: null,
-};
-
-// DOM
-const $desc = document.getElementById("desc");
-const $descText = document.getElementById("descText");
-const $opts = document.getElementById("opts");
-const $btnInv = document.getElementById("btnInv");
-const $btnFlags = document.getElementById("btnFlags");
-const $ovInv = document.getElementById("overlayInv");
-const $ovFlags = document.getElementById("overlayFlags");
-const $invList = document.getElementById("invList");
-const $flagsList = document.getElementById("flagsList");
-const $blink = document.getElementById("blink");
-
-// helpers
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-function save() {
-  localStorage.setItem("bwa_save", JSON.stringify({
-    current: state.current,
-    inv: state.inv,
-    flags: state.flags,
-    lastImg: state.lastImg
-  }));
-}
-function load() {
-  try {
-    const s = JSON.parse(localStorage.getItem("bwa_save")||"{}");
-    Object.assign(state, s);
-  } catch {}
-}
-async function preload(src){
-  if (!src) return;
-  await new Promise(res=>{
-    const i = new Image(); i.onload=res; i.onerror=res; i.src=src;
-  });
-}
-function setDescBg(imgName){
-  const url = imgName ? `images/${imgName}` : null;
-  if (url === state.lastImg) return;
-  $desc.style.opacity = 0.0;
-  setTimeout(async ()=>{
-    if (url) await preload(url);
-    $desc.style.setProperty("--bg", `url(${url})`);
-    $desc.style.opacity = 1;
-    state.lastImg = url;
-  }, 180);
-}
-Object.defineProperty($desc.style, "backgroundImage", {
-  set(_){} // защитимся от внезапных внешних вмешательств
-});
-$desc.style.setProperty("--bg","none");
-$desc.addEventListener("transitionend",()=>{});
-
-// обновление панелей
-function renderInv(){
-  $invList.innerHTML = "";
-  const items = Object.entries(state.inv).filter(([,c])=>c>0);
-  if (!items.length) {
-    $invList.innerHTML = "<li>пусто</li>";
-  } else {
-    for (const [k,v] of items){
-      const li = document.createElement("li");
-      li.textContent = `${k}: ${v} шт`;
-      $invList.appendChild(li);
-    }
-  }
-}
-function renderFlags(){
-  $flagsList.innerHTML = "";
-  const items = Object.entries(state.flags);
-  if (!items.length) $flagsList.innerHTML = "<li>—</li>";
-  for (const [k,v] of items){
-    const li = document.createElement("li");
-    li.textContent = `${k}=${v}`;
-    $flagsList.appendChild(li);
-  }
+async function loadScenes() {
+    const response = await fetch("scenes.json");
+    scenes = await response.json();
+    renderScene();
 }
 
-// требования
-function hasItems(req){
-  if (!req) return true;
-  for (const [k,v] of Object.entries(req)){
-    if ((state.inv[k]||0) < Number(v)) return false;
-  }
-  return true;
-}
-// применение
-function addItems(map){
-  if (!map) return;
-  for (const [k,v] of Object.entries(map)){
-    state.inv[k] = (state.inv[k]||0) + Number(v);
-    if (state.inv[k] <= 0) delete state.inv[k];
-  }
-}
-function useItems(map){
-  if (!map) return true;
-  if (!hasItems(map)) return false;
-  for (const [k,v] of Object.entries(map)){
-    state.inv[k] = (state.inv[k]||0) - Number(v);
-    if (state.inv[k] <= 0) delete state.inv[k];
-  }
-  return true;
-}
+function renderScene() {
+    const scene = scenes[currentScene];
+    if (!scene) return;
 
-function blink(){
-  $blink.classList.remove("hidden");
-  $blink.classList.add("active");
-  setTimeout(()=>{
-    $blink.classList.remove("active");
-    $blink.classList.add("hidden");
-  }, 360);
-}
-
-function optionButton(opt){
-  const b = document.createElement("button");
-  b.className = "btn";
-  b.textContent = opt.label || "Выбор";
-  if (opt.requires) b.classList.add("extra");
-  if (opt.use_items) b.classList.add("spend");
-  b.onclick = async ()=>{
-    // анимация выбора
-    b.classList.add("selected");
-    for (const el of $opts.querySelectorAll(".btn")){
-      if (el !== b) el.classList.add("fadeout");
-    }
-    await sleep(700);
-
-    // трата/получение/флаги
-    if (opt.use_items && !useItems(opt.use_items)) return;
-    if (opt.add_items) addItems(opt.add_items);
-    if (opt.set_flags) Object.assign(state.flags, opt.set_flags);
-
-    // переход
-    if (opt.restart){
-      state.inv = {};
-      state.flags = {};
-      state.current = "start";
+    // Текст и картинка
+    document.getElementById("description").innerText = scene.text || "";
+    const img = document.getElementById("scene-image");
+    if (scene.image) {
+        img.src = "images/" + scene.image;
+        img.style.display = "block";
     } else {
-      state.current = opt.to || state.current;
+        img.style.display = "none";
     }
 
-    save();
-    await showScene(state.current, {withBlink:true});
-  };
-  return b;
-}
+    // Кнопки
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
 
-async function showScene(key, {withBlink=false}={}){
-  const sc = state.scenes[key];
-  if (!sc) return;
+    if (scene.options) {
+        scene.options.forEach(opt => {
+            // Если это строка → превращаем в объект
+            if (typeof opt === "string") {
+                opt = { text: opt, to: null }; 
+            }
 
-  if (withBlink) blink();
+            // Проверка на requires (если есть)
+            if (opt.requires) {
+                if (opt.requires.inventory && !inventory[opt.requires.inventory]) {
+                    return;
+                }
+                if (opt.requires.flag && !flags[opt.requires.flag]) {
+                    return;
+                }
+            }
 
-  setDescBg(sc.image || null);
-  $desc.style.setProperty("--img", sc.image ? `url(images/${sc.image})` : "none");
-  $desc.style.setProperty("background-image", `var(--bg)`); // управляем через ::before
-  $descText.textContent = sc.description || "…";
+            // Создаём кнопку
+            const btn = document.createElement("button");
+            btn.className = "option-button";
+            btn.innerText = opt.text || "???";
+            btn.onclick = () => {
+                // Добавление предметов
+                if (opt.add_inventory) {
+                    opt.add_inventory.forEach(item => {
+                        inventory[item] = (inventory[item] || 0) + 1;
+                    });
+                }
 
-  // варианты
-  $opts.innerHTML = "";
-  const avail = (sc.options||[]).filter(opt => hasItems(opt.requires));
-  for (const opt of avail){
-    const btn = optionButton(opt);
-    $opts.appendChild(btn);
-  }
+                // Трата предметов
+                if (opt.consume_inventory) {
+                    opt.consume_inventory.forEach(item => {
+                        if (inventory[item]) {
+                            inventory[item]--;
+                            if (inventory[item] <= 0) {
+                                delete inventory[item];
+                            }
+                        }
+                    });
+                }
 
-  renderInv();
-  renderFlags();
-}
+                // Установка флагов
+                if (opt.set_flags) {
+                    for (const [key, val] of Object.entries(opt.set_flags)) {
+                        flags[key] = val;
+                    }
+                }
 
-async function init(){
-  // фон ::before
-  const sheet = document.styleSheets[0];
-  for (let i=0;i<sheet.cssRules.length;i++){
-    const r = sheet.cssRules[i];
-    if (r.selectorText === ".desc::before"){
-      // динамическая подмена из JS
-      new MutationObserver(()=>{}); // фиктивно, чтобы не ругался
-      // будем менять через style.setProperty("--bg", ...)
-      document.getElementById("desc").style.backgroundImage = ""; // no-op
-      break;
+                // Переход в следующую сцену
+                if (opt.to) {
+                    currentScene = opt.to;
+                }
+                renderScene();
+            };
+            optionsDiv.appendChild(btn);
+        });
     }
-  }
 
-  const res = await fetch("scenes.json?_=" + Date.now());
-  state.scenes = await res.json();
-  load();
-
-  // ui
-  $btnInv.onclick = ()=>{$ovInv.classList.toggle("hidden"); renderInv();};
-  $btnFlags.onclick = ()=>{$ovFlags.classList.toggle("hidden"); renderFlags();};
-  $ovInv.onclick = (e)=>{ if (e.target=== $ovInv) $ovInv.classList.add("hidden")};
-  $ovFlags.onclick = (e)=>{ if (e.target=== $ovFlags) $ovFlags.classList.add("hidden")};
-
-  await showScene(state.current || "start", {withBlink:true});
+    renderInventory();
+    renderFlags();
 }
 
-init();
+function renderInventory() {
+    const invDiv = document.getElementById("inventory-list");
+    invDiv.innerHTML = "";
+
+    for (const [item, count] of Object.entries(inventory)) {
+        const el = document.createElement("div");
+        el.innerText = `${item}: ${count} шт`;
+        invDiv.appendChild(el);
+    }
+}
+
+function renderFlags() {
+    const flDiv = document.getElementById("flags-list");
+    flDiv.innerHTML = "";
+
+    for (const [key, val] of Object.entries(flags)) {
+        const el = document.createElement("div");
+        el.innerText = `${key}: ${val}`;
+        flDiv.appendChild(el);
+    }
+}
+
+window.onload = loadScenes;
