@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+  <title>Ночная 115-я</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div id="blink" class="blink hidden">
+    <div class="lid top"></div>
+    <div class="lid bottom"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="board">
+      <div id="desc" class="desc">
+        <div class="hud-row">
+          <button id="btnInv" class="mini">Инвентарь</button>
+          <button id="btnFlags" class="mini">Флаги</button>
+        </div>
+        <div id="descText" class="text">Загрузка…</div>
+
+        <div id="overlayInv" class="overlay hidden">
+          <div class="panel">
+            <div class="title">Инвентарь</div>
+            <ul id="invList"></ul>
+          </div>
+        </div>
+
+        <div id="overlayFlags" class="overlay hidden">
+          <div class="panel">
+            <div class="title">Флаги</div>
+            <ul id="flagsList"></ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="options">
+        <div id="opts" class="opts"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
