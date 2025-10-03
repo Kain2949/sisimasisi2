@@ -16,7 +16,7 @@ body{
   border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; position:relative; }
 
 #desc{ min-height:520px; display:flex; flex-direction:column; }
-#bg{ position:absolute; inset:0; background:#0b0e13 center/cover no-repeat; opacity:.35; filter:contrast(1.05) saturate(.9); }
+#bg{ position:absolute; inset:0; background:# center/cover no-repeat; }
 #desc .text{ position:relative; padding:24px 26px 28px; font-size:18px; min-height:160px; }
 
 .hud{ position:absolute; right:16px; bottom:16px; display:flex; gap:10px; }
@@ -39,7 +39,7 @@ body{
   border:1px solid rgba(255,255,255,.06);
   cursor:pointer; 
   transition:.2s transform, .2s background, .2s border-color, .2s opacity;
-  color: var(--ink);   /* вот эта строка исправит цвет текста */
+  color: #fff;   /* вот эта строка исправит цвет текста */
 }
 .option:hover{ transform:translateY(-2px); background:#1b2230; }
 .option.req{ border-color: rgba(48,79,254,.45); }
