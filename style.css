@@ -12,8 +12,11 @@ body{
 }
 #app{ max-width:1200px; margin:24px auto; padding:0 16px;}
 .stage{ display:grid; grid-template-columns: 1fr 420px; gap:24px; }
-.pane .card{ background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.02)), var(--card);
-  border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; position:relative; }
+.pane .card{ background: var(--card); 
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  position: relative; }
 
 #desc{ min-height:520px; display:flex; flex-direction:column; }
 #bg{ position:absolute; inset:0; background:# center/cover no-repeat; }
