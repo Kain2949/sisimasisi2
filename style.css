@@ -31,9 +31,15 @@ body{
 
 .stack{ display:flex; flex-direction:column; gap:12px; }
 .option{
-  display:block; padding:18px 20px; border-radius:var(--radius);
-  background:#161b25; box-shadow:var(--shadow); border:1px solid rgba(255,255,255,.06);
-  cursor:pointer; transition:.2s transform, .2s background, .2s border-color, .2s opacity;
+  display:block; 
+  padding:18px 20px; 
+  border-radius:var(--radius);
+  background:#161b25; 
+  box-shadow:var(--shadow); 
+  border:1px solid rgba(255,255,255,.06);
+  cursor:pointer; 
+  transition:.2s transform, .2s background, .2s border-color, .2s opacity;
+  color: var(--ink);   /* вот эта строка исправит цвет текста */
 }
 .option:hover{ transform:translateY(-2px); background:#1b2230; }
 .option.req{ border-color: rgba(48,79,254,.45); }
