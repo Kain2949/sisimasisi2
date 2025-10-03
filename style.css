@@ -12,14 +12,22 @@ body{
 }
 #app{ max-width:1200px; margin:24px auto; padding:0 16px;}
 .stage{ display:grid; grid-template-columns: 1fr 420px; gap:24px; }
-.pane .card{ background: var(--card); 
+.pane .card {
+  background: none; /* убираем дымку */
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
-  position: relative; }
+  position: relative;
+}
 
 #desc{ min-height:520px; display:flex; flex-direction:column; }
-#bg{ position:absolute; inset:0; background:# center/cover no-repeat; }
+#bg {
+  position:absolute;
+  inset:0;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
 #desc .text{ position:relative; padding:24px 26px 28px; font-size:18px; min-height:160px; }
 
 .hud{ position:absolute; right:16px; bottom:16px; display:flex; gap:10px; }
