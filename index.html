@@ -22,7 +22,9 @@
             <span id="descText">Загрузка…</span>
           </div>
 
+          <!-- HUD -->
           <div class="hud">
+            <div id="timer" class="timer">00:00</div>
             <button class="pill pill-quiet" id="invBtn" type="button">Инвентарь</button>
             <button class="pill pill-quiet" id="flagsBtn" type="button">Флаги</button>
           </div>
@@ -54,12 +56,12 @@
       </div>
 
       <div class="boot-tip">
-        Максимум 10 секунд — дальше игра стартует, остальное догрузится в фоне.
+        Максимум 10 секунд — дальше стартуем, остальное догрузится в фоне.
       </div>
     </div>
   </div>
 
-  <!-- «Веки» для моргания -->
+  <!-- «Веки» -->
   <div class="eyelid top" id="eyelidTop"></div>
   <div class="eyelid bot" id="eyelidBot"></div>
 
@@ -80,7 +82,56 @@
     </div>
   </dialog>
 
-  <!-- Только app.js. Сцены берём из scenes.json -->
+  <!-- Оверлей: меню и регистрация -->
+  <div id="overlay" class="overlay hidden">
+    <!-- Главное меню -->
+    <div id="menuPanel" class="panel hidden">
+      <h2>Raf game</h2>
+      <div class="vstack">
+        <button id="btnStart" class="btn">▶️ Начать</button>
+        <button id="btnContinue" class="btn btn-quiet">🔁 Продолжить</button>
+        <button id="btnSettings" class="btn btn-quiet">⚙️ Настройки</button>
+        <button id="btnLeaderboard" class="btn btn-quiet">🏆 Лидерборд</button>
+      </div>
+    </div>
+
+    <!-- Регистрация -->
+    <div id="regPanel" class="panel hidden">
+      <h2>Регистрация</h2>
+      <div class="form">
+        <label>
+          Никнейм
+          <input id="regNick" type="text" maxlength="24" placeholder="твой ник" />
+        </label>
+
+        <label>
+          Тег в Telegram (без @)
+          <input id="regTag" type="text" maxlength="32" placeholder="например, kain2949" />
+        </label>
+
+        <label class="gender">
+          Пол
+          <select id="regGender">
+            <option value="m">мужской</option>
+            <option value="f">женский</option>
+          </select>
+        </label>
+
+        <div class="form-row">
+          <button id="btnSendCode" class="btn">Отправить код</button>
+          <input id="regCode" type="text" inputmode="numeric" maxlength="6" placeholder="код из бота" />
+          <button id="btnVerify" class="btn btn-quiet">Подтвердить</button>
+        </div>
+
+        <div id="regMsg" class="muted"></div>
+        <div class="form-row">
+          <button id="btnRegBack" class="btn btn-quiet">Назад</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Сцены берём из scenes.json -->
   <script src="app.js"></script>
 </body>
 </html>

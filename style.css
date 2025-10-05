@@ -22,6 +22,10 @@
   --opt-border-req:   rgba(48,79,254,.45);
 
   --boot-track:       #151a24;
+
+  --panel:            #0b111a;
+  --input:            #0f1726;
+  --input-border:     rgba(255,255,255,.08);
 }
 
 /* ================================
@@ -43,7 +47,11 @@ body{
   font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
-/* Прячем сцену во время прелоада */
+.hidden{
+  display: none !important;
+}
+
+/* прячем сцену во время прелоада */
 body.booting .stage{
   opacity: 0;
   pointer-events: none;
@@ -76,7 +84,7 @@ body.ready .boot{
 }
 
 /* ================================
-   CARD / PANES
+   CARDS / PANES
    ================================ */
 .pane .card{
   background: var(--card);
@@ -106,7 +114,7 @@ body.ready .boot{
   min-height: 160px;
 }
 
-/* Подсказка "тап — показать сразу" */
+/* подсказка "тап — показать сразу" */
 #desc .text::after{
   content: "Нажми на текст, чтобы показать сразу";
   display: block;
@@ -121,10 +129,23 @@ body.ready .boot{
    ================================ */
 .hud{
   position: absolute;
+  left: 16px;
   right: 16px;
   bottom: 16px;
   display: flex;
   gap: 10px;
+  align-items: center;
+}
+
+.timer{
+  margin-right: auto;
+  background: #101725;
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #d0d8ea;
+  opacity: .9;
 }
 
 .pill{
@@ -312,6 +333,92 @@ dialog .close{
 
 .eyelid.bot{
   bottom: 0;
+}
+
+/* ================================
+   OVERLAY (меню/регистрация)
+   ================================ */
+.overlay{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,.5);
+  backdrop-filter: blur(2px);
+  z-index: 10001;
+}
+
+.panel{
+  width: min(520px, 92vw);
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+  padding: 22px 22px 16px;
+  box-shadow: var(--shadow);
+}
+
+.vstack{
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn{
+  appearance: none;
+  border: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--btn-bg);
+  color: var(--ink);
+  cursor: pointer;
+  transition: .2s transform, .2s background, .2s opacity;
+  text-align: left;
+}
+
+.btn:hover{
+  transform: translateY(-1px);
+  background: var(--btn-bg-hover);
+}
+
+.btn-quiet{
+  opacity: .9;
+}
+
+.form{
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+label{
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: #c8d1e3;
+}
+
+input,
+select{
+  appearance: none;
+  background: var(--input);
+  color: var(--ink);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.form-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.muted{
+  color: var(--muted);
+  font-size: 13px;
+  opacity: .9;
 }
 
 /* ================================

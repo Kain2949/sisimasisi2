@@ -3,7 +3,7 @@ const tg = window.Telegram?.WebApp;
 if (tg) {
   try {
     tg.expand();
-    tg.setBackgroundColor("#070a0f");   // не везде поддерживается — и ладно
+    tg.setBackgroundColor("#070a0f");
     tg.setHeaderColor("secondary");
   } catch {}
 }
@@ -20,6 +20,8 @@ const $bootCnt    = document.getElementById("bootCount");
 const $eyetop     = document.getElementById("eyelidTop");
 const $eyebot     = document.getElementById("eyelidBot");
 
+const $timer      = document.getElementById("timer");
+
 const $invBtn     = document.getElementById("invBtn");
 const $flagsBtn   = document.getElementById("flagsBtn");
 const $invDlg     = document.getElementById("invDlg");
@@ -29,10 +31,31 @@ const $flagsClose = document.getElementById("flagsClose");
 const $invList    = document.getElementById("invList");
 const $flagsList  = document.getElementById("flagsList");
 
+// Overlay + меню/регистрация
+const $overlay    = document.getElementById("overlay");
+const $menuPanel  = document.getElementById("menuPanel");
+const $regPanel   = document.getElementById("regPanel");
+
+const $btnStart       = document.getElementById("btnStart");
+const $btnContinue    = document.getElementById("btnContinue");
+const $btnSettings    = document.getElementById("btnSettings");
+const $btnLeaderboard = document.getElementById("btnLeaderboard");
+
+const $regNick    = document.getElementById("regNick");
+const $regTag     = document.getElementById("regTag");
+const $regGender  = document.getElementById("regGender");
+const $btnSendCode= document.getElementById("btnSendCode");
+const $regCode    = document.getElementById("regCode");
+const $btnVerify  = document.getElementById("btnVerify");
+const $regMsg     = document.getElementById("regMsg");
+const $btnRegBack = document.getElementById("btnRegBack");
+
 // Config
 const IMG_BASE           = "images/";
-const SCENES_URL         = "scenes.json"; // живём на JSON
+const SCENES_URL         = "scenes.json";
 const CACHE_KEY_SCENES   = "scenes_cache_v1";
+const CACHE_KEY_AUTH     = "auth115";
+const CACHE_KEY_SAVE     = "game115";
 const TYPEWRITE_MAX_MS   = 3000;
 const HEARTBEAT_MS       = 15000;
 
@@ -44,7 +67,20 @@ const state = {
   flags: {},
   lastBg: null,
   startedAt: null,
-  elapsedSec: 0
+  elapsedSec: 0,
+
+  // регистрация
+  auth: {
+    verified: false,
+    nickname: "",
+    tag: "",
+    gender: "m",
+    pendingCode: ""
+  },
+
+  // таймер
+  _tickTimer: null,
+  running: false
 };
 
 // Cache
@@ -67,17 +103,35 @@ function updateBoot(progress, loaded, total) {
   $bootCnt.textContent = `${loaded}/${total}`;
 }
 
-// ===== Scenes: JSON + локальный кэш =====
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60);
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+
+function startTimer() {
+  if (state._tickTimer) clearInterval(state._tickTimer);
+  state.running = true;
+  state._tickTimer = setInterval(() => {
+    if (!state.running) return;
+    state.elapsedSec += 1;
+    $timer.textContent = fmtTime(state.elapsedSec);
+  }, 1000);
+}
+
+function pauseTimer() {
+  state.running = false;
+}
+
+// Scenes: JSON + локальный кэш
 async function fetchScenesJson() {
-  // пробуем сеть
   try {
-    const res = await fetch(`${SCENES_URL}?v=4`, { cache: "no-cache" });
+    const res = await fetch(`${SCENES_URL}?v=7`, { cache: "no-cache" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     localStorage.setItem(CACHE_KEY_SCENES, JSON.stringify(data));
     return data;
   } catch (e) {
-    // если сеть не дала — из локального кэша
     const cached = localStorage.getItem(CACHE_KEY_SCENES);
     if (cached) return JSON.parse(cached);
     throw e;
@@ -93,7 +147,7 @@ function uniqueImagesFromScenes(scenes) {
   return Array.from(set);
 }
 
-// ===== Aggressive preloading (≤10s) =====
+// Aggressive preloading (≤10s)
 function fastPreloadImages(names, onProgress) {
   let loaded = 0;
   const total = names.length;
@@ -128,7 +182,7 @@ function fastPreloadImages(names, onProgress) {
   });
 }
 
-// ===== Background + blink =====
+// Background + blink
 function setBackground(imageName, meta = {}) {
   if (!imageName) return;
 
@@ -151,7 +205,7 @@ async function blink(ms = 320) {
   $eyebot.style.height = "0";
 }
 
-// ===== Typewriter (tap-to-skip) =====
+// Typewriter (tap-to-skip)
 async function typewrite($node, text) {
   const s = String(text || "");
   $node.textContent = "";
@@ -173,7 +227,7 @@ async function typewrite($node, text) {
   }
 }
 
-// ===== Options =====
+// Options
 function normalizeOptions(sc) {
   if (!sc) return [];
   if (Array.isArray(sc.options)) {
@@ -191,7 +245,7 @@ function normalizeOptions(sc) {
   return out;
 }
 
-// ===== Inventory / Flags =====
+// Inventory / Flags
 function renderInventory() {
   const list = Object.entries(state.inventory || {}).filter(([, n]) => n > 0);
   if (!list.length) {
@@ -210,9 +264,9 @@ function renderFlags() {
   $flagsList.innerHTML = list.map(([k, v]) => `<div>${k}: ${String(v)}</div>`).join("");
 }
 
-// ===== Save / Load local =====
+// Save / Load local
 function saveLocal() {
-  localStorage.setItem("game115", JSON.stringify({
+  localStorage.setItem(CACHE_KEY_SAVE, JSON.stringify({
     current: state.current,
     inventory: state.inventory,
     flags: state.flags,
@@ -224,7 +278,7 @@ function saveLocal() {
 
 function loadLocal() {
   try {
-    const saved = JSON.parse(localStorage.getItem("game115") || "{}");
+    const saved = JSON.parse(localStorage.getItem(CACHE_KEY_SAVE) || "{}");
     if (saved && saved.current && saved.current in state.scenes) {
       state.current    = saved.current;
       state.inventory  = saved.inventory || {};
@@ -240,7 +294,27 @@ function loadLocal() {
   } catch {}
 }
 
-// ===== Sync / Heartbeat =====
+// Auth: local
+function saveAuth() {
+  localStorage.setItem(CACHE_KEY_AUTH, JSON.stringify(state.auth));
+}
+
+function loadAuth() {
+  try {
+    const a = JSON.parse(localStorage.getItem(CACHE_KEY_AUTH) || "{}");
+    if (a && typeof a === "object") {
+      state.auth = {
+        verified: !!a.verified,
+        nickname: a.nickname || "",
+        tag: a.tag || "",
+        gender: a.gender || "m",
+        pendingCode: ""
+      };
+    }
+  } catch {}
+}
+
+// Sync / Heartbeat
 let hbTimer = null;
 
 function syncState(reason = "auto") {
@@ -257,7 +331,7 @@ function syncState(reason = "auto") {
 function startHeartbeat() {
   if (hbTimer) clearInterval(hbTimer);
   hbTimer = setInterval(() => {
-    state.elapsedSec += HEARTBEAT_MS / 1000;
+    if (!state.running) return;
     send("heartbeat", {
       scene: state.current,
       elapsed_sec: state.elapsedSec
@@ -266,7 +340,131 @@ function startHeartbeat() {
   }, HEARTBEAT_MS);
 }
 
-// ===== Render scene =====
+// Registration
+function genCode6() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function showOverlay(show) {
+  $overlay.classList.toggle("hidden", !show);
+}
+
+function showPanel(panel) {
+  $menuPanel.classList.add("hidden");
+  $regPanel.classList.add("hidden");
+  panel.classList.remove("hidden");
+  showOverlay(true);
+  pauseTimer();
+}
+
+function hideOverlay() {
+  showOverlay(false);
+  startTimer();
+}
+
+function openMenu() {
+  $btnContinue.disabled = !(state.current && state.current in state.scenes);
+  $btnStart.disabled    = !state.auth.verified;
+  showPanel($menuPanel);
+}
+
+function openRegistration() {
+  $regNick.value = state.auth.nickname || "";
+  $regTag.value  = state.auth.tag || "";
+  $regGender.value = state.auth.gender || "m";
+  $regMsg.textContent = "";
+  showPanel($regPanel);
+}
+
+// UI handlers
+$btnStart?.addEventListener("click", () => {
+  state.startedAt = new Date().toISOString();
+  state.elapsedSec = 0;
+  $timer.textContent = "00:00";
+  hideOverlay();
+  renderScene("start");
+  syncState("start_new");
+});
+
+$btnContinue?.addEventListener("click", () => {
+  hideOverlay();
+  renderScene(state.current || "start");
+  syncState("continue");
+});
+
+$btnSettings?.addEventListener("click", () => {
+  alert("Настройки появятся позже.");
+});
+
+$btnLeaderboard?.addEventListener("click", () => {
+  alert("Лидерборд реализован в боте командой /top.");
+});
+
+$btnRegBack?.addEventListener("click", openMenu);
+
+$btnSendCode?.addEventListener("click", () => {
+  const nickname = ($regNick.value || "").trim();
+  const tag      = ($regTag.value || "").trim().replace(/^@+/, "");
+  const gender   = $regGender.value;
+
+  if (!nickname || !tag) {
+    $regMsg.textContent = "Укажи ник и тег.";
+    return;
+  }
+
+  const code = genCode6();
+
+  state.auth.nickname   = nickname;
+  state.auth.tag        = tag;
+  state.auth.gender     = gender;
+  state.auth.pendingCode= code;
+  saveAuth();
+
+  send("request_code", {
+    nickname,
+    tag,
+    gender,
+    code
+  });
+
+  $regMsg.textContent = "Код отправлен тебе в Telegram. Введи его ниже.";
+});
+
+$btnVerify?.addEventListener("click", () => {
+  const inCode = ($regCode.value || "").trim();
+
+  if (!state.auth.pendingCode) {
+    $regMsg.textContent = "Сначала нажми «Отправить код».";
+    return;
+  }
+
+  if (inCode !== state.auth.pendingCode) {
+    $regMsg.textContent = "Неверный код.";
+    return;
+  }
+
+  if (state.auth.gender === "f") {
+    // Я НЕ буду тебя банить по полу. Просто не пускаю в эту ветку.
+    $regMsg.textContent = "Сейчас доступна только мужская ветка. Выбери 'мужской'.";
+    return;
+  }
+
+  state.auth.verified = true;
+  state.auth.pendingCode = "";
+  saveAuth();
+
+  send("verify_code", { ok: true });
+
+  openMenu();
+});
+
+// Inventory / Flags modals
+$invBtn?.addEventListener("click", () => { renderInventory(); $invDlg.showModal(); pauseTimer(); });
+$flagsBtn?.addEventListener("click", () => { renderFlags(); $flagsDlg.showModal(); pauseTimer(); });
+$invClose?.addEventListener("click", () => { $invDlg.close(); startTimer(); });
+$flagsClose?.addEventListener("click", () => { $flagsDlg.close(); startTimer(); });
+
+// Render scene
 async function renderScene(key) {
   const sc = state.scenes[key];
   if (!sc) return;
@@ -289,9 +487,7 @@ async function renderScene(key) {
     if (opt.requires && opt.requires.type === "item") {
       const need  = opt.requires.name;
       const count = opt.requires.count || 1;
-      if (!state.inventory[need] || state.inventory[need] < count) {
-        continue;
-      }
+      if (!state.inventory[need] || state.inventory[need] < count) continue;
     }
 
     const btn = document.createElement("button");
@@ -317,23 +513,23 @@ async function renderScene(key) {
 
   send("scene_enter", { scene: key });
   saveLocal();
+  startTimer();
 }
 
-// ===== Init =====
+// Init
 (async function init(){
   try {
-    // 1) грузим scenes.json (или из локального кэша)
     state.scenes = await fetchScenesJson();
 
-    // 2) прелоадим фоны агрессивно, но не дольше 10 сек
     const imgs = uniqueImagesFromScenes(state.scenes);
     fastPreloadImages(imgs, updateBoot);
 
-    // 3) поднимаем локальный сейв, если валиден
+    // load local
+    loadAuth();
     loadLocal();
     if (!state.startedAt) state.startedAt = new Date().toISOString();
 
-    // 4) ждём максимум 10 сек и стартуем игру
+    // wait preload up to 10s
     const t0 = Date.now();
     while (!preloadDone && Date.now() - t0 < 10000) {
       await sleep(100);
@@ -342,9 +538,15 @@ async function renderScene(key) {
     document.body.classList.remove("booting");
     document.body.classList.add("ready");
 
-    renderScene(state.current);
+    // show menu or registration
+    if (state.auth.verified) openMenu();
+    else openRegistration();
+
+    // do not start timer while in overlay
+    pauseTimer();
+
     startHeartbeat();
-    syncState("start");
+    syncState("app_ready");
   } catch (err) {
     console.error(err);
     document.body.classList.remove("booting");
@@ -352,9 +554,3 @@ async function renderScene(key) {
     $descText.textContent = "Не удалось загрузить игру. Проверь подключение и обнови.";
   }
 })();
-
-// HUD
-$invBtn?.addEventListener("click", () => { renderInventory(); $invDlg.showModal(); });
-$flagsBtn?.addEventListener("click", () => { renderFlags(); $flagsDlg.showModal(); });
-$invClose?.addEventListener("click", () => $invDlg.close());
-$flagsClose?.addEventListener("click", () => $flagsDlg.close());
