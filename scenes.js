@@ -1430,6 +1430,5 @@ const SCENES = {
     "Вернуться": "to_corridors"
   }
 }
-}
 };
 window.SCENES = SCENES;
