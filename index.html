@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Ночная 115-я</title>
+  <title>Raf game</title>
 
   <link rel="preconnect" href="https://telegram.org" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -12,21 +12,21 @@
 </head>
 <body class="booting">
   <div id="app">
-    <div class="stage">
-      <!-- Левая область: фон + текст -->
+    <div class="stage" id="stage">
+      <!-- Левая платформа: фон + текст -->
       <div class="pane">
         <div class="card" id="desc">
-          <div id="bg" aria-hidden="true"></div>
+          <!-- ФОН через <img>, железобетонно виден в WebView -->
+          <img id="bgImg" alt="" />
 
           <div class="text">
             <span id="descText">Загрузка…</span>
           </div>
 
-          <!-- HUD -->
-          <div class="hud">
+          <!-- Нижняя платформа HUD -->
+          <div class="hudbar">
             <div id="timer" class="timer">00:00</div>
-            <button class="pill pill-quiet" id="invBtn" type="button">Инвентарь</button>
-            <button class="pill pill-quiet" id="flagsBtn" type="button">Флаги</button>
+            <button id="menuBtn" class="hud-menu" aria-label="Меню" title="Меню">≡</button>
           </div>
         </div>
       </div>
@@ -40,28 +40,18 @@
     </div>
   </div>
 
-  <!-- Экран загрузки -->
+  <!-- Экран загрузки (макс. 10с) -->
   <div id="boot" class="boot" aria-live="polite">
     <div class="boot-box">
       <div class="boot-title">Готовлю фон…</div>
-
-      <div class="boot-progress">
-        <div id="bootBar"></div>
-      </div>
-
+      <div class="boot-progress"><div id="bootBar"></div></div>
       <div class="boot-meta">
-        <span id="bootPct">0%</span>
-        <span>·</span>
-        <span id="bootCount">0/0</span>
-      </div>
-
-      <div class="boot-tip">
-        Максимум 10 секунд — дальше стартуем, остальное догрузится в фоне.
+        <span id="bootPct">0%</span><span>·</span><span id="bootCount">0/0</span>
       </div>
     </div>
   </div>
 
-  <!-- «Веки» -->
+  <!-- «Веки» для моргания -->
   <div class="eyelid top" id="eyelidTop"></div>
   <div class="eyelid bot" id="eyelidBot"></div>
 
@@ -82,22 +72,27 @@
     </div>
   </dialog>
 
-  <!-- Оверлей: меню и регистрация -->
+  <!-- ГЛАВНОЕ МЕНЮ / РЕГИСТРАЦИЯ -->
   <div id="overlay" class="overlay hidden">
-    <!-- Главное меню -->
+    <!-- Главное меню как на твоём скетче -->
     <div id="menuPanel" class="panel hidden">
-      <h2>Raf game</h2>
-      <div class="vstack">
-        <button id="btnStart" class="btn">▶️ Начать</button>
-        <button id="btnContinue" class="btn btn-quiet">🔁 Продолжить</button>
-        <button id="btnSettings" class="btn btn-quiet">⚙️ Настройки</button>
-        <button id="btnLeaderboard" class="btn btn-quiet">🏆 Лидерборд</button>
+      <h1 class="brand">Raf game</h1>
+
+      <div class="menu-col">
+        <button id="btnStart" class="cta">Начать</button>
+        <button id="btnContinue" class="cta ghost">продолжить</button>
+      </div>
+
+      <div class="menu-bottom">
+        <button id="btnLeaderboard" class="round" title="Лидерборд">🏆</button>
+        <button id="btnSettings" class="round" title="Настройки">⚙️</button>
       </div>
     </div>
 
-    <!-- Регистрация -->
+    <!-- Регистрация (гейт, пока не verified) -->
     <div id="regPanel" class="panel hidden">
       <h2>Регистрация</h2>
+
       <div class="form">
         <label>
           Никнейм
@@ -109,7 +104,7 @@
           <input id="regTag" type="text" maxlength="32" placeholder="например, kain2949" />
         </label>
 
-        <label class="gender">
+        <label>
           Пол
           <select id="regGender">
             <option value="m">мужской</option>
@@ -117,21 +112,29 @@
           </select>
         </label>
 
-        <div class="form-row">
+        <div class="dual">
           <button id="btnSendCode" class="btn">Отправить код</button>
           <input id="regCode" type="text" inputmode="numeric" maxlength="6" placeholder="код из бота" />
-          <button id="btnVerify" class="btn btn-quiet">Подтвердить</button>
+          <button id="btnVerify" class="btn quiet">Подтвердить</button>
         </div>
 
         <div id="regMsg" class="muted"></div>
-        <div class="form-row">
-          <button id="btnRegBack" class="btn btn-quiet">Назад</button>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- Сцены берём из scenes.json -->
+  <!-- ВНУТРЕННЕЕ МЕНЮ (в самой игре) -->
+  <div id="ingameOverlay" class="overlay hidden">
+    <div class="panel small">
+      <div class="vstack">
+        <button id="gmInventory" class="btn">Инвентарь</button>
+        <button id="gmFlags" class="btn">Флаги</button>
+        <button id="gmSaveExit" class="btn danger">Сохранить и выйти в меню</button>
+        <button id="gmBack" class="btn quiet">Назад в игру</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

@@ -1,31 +1,19 @@
 /* ================================
-   THEME
+   THEME (темнее, холодная синь)
    ================================ */
 :root{
-  --bg:               #070a0f;
-  --card:             #0f131b;
-  --ink:              #e9edf4;
-  --muted:            #9aa6bd;
+  --bg:           #06080c;    /* почти чёрный с лёгкой синевой */
+  --surface:      #0b1017;    /* общие панели/карточки */
+  --surface-2:    #0d1524;    /* кнопки/HUD */
+  --surface-3:    #0f172a;    /* опции/hover */
+  --ink:          #e9edf4;    /* текст */
+  --muted:        #9aa6bd;    /* вторичный */
+  --accent:       #1f6cff;    /* подсветка/прогресс */
+  --accent-2:     #6ee7ff;
 
-  --accent:           #304ffe;
-  --accent-2:         #6ee7ff;
-
-  --shadow:           0 10px 30px rgba(0,0,0,.35);
-  --radius:           18px;
-
-  --btn-bg:           #121827;
-  --btn-bg-hover:     #172135;
-
-  --opt-bg:           #121720;
-  --opt-bg-hover:     #161c28;
-  --opt-border:       rgba(255,255,255,.06);
-  --opt-border-req:   rgba(48,79,254,.45);
-
-  --boot-track:       #151a24;
-
-  --panel:            #0b111a;
-  --input:            #0f1726;
-  --input-border:     rgba(255,255,255,.08);
+  --radius:       18px;
+  --shadow:       0 10px 30px rgba(0,0,0,.45);
+  --border:       1px solid rgba(255,255,255,.06);
 }
 
 /* ================================
@@ -35,8 +23,7 @@
   box-sizing: border-box;
 }
 
-html,
-body{
+html, body{
   height: 100%;
 }
 
@@ -51,20 +38,10 @@ body{
   display: none !important;
 }
 
-/* прячем сцену во время прелоада */
+/* во время прелоада прячем сцену */
 body.booting .stage{
   opacity: 0;
   pointer-events: none;
-}
-
-body.ready .boot{
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .25s ease;
-}
-
-body.ready .boot{
-  display: none;
 }
 
 /* ================================
@@ -80,18 +57,24 @@ body.ready .boot{
   display: grid;
   grid-template-columns: 1fr 420px;
   gap: 24px;
-  transition: opacity .25s ease;
+  transition: transform .28s ease, filter .28s ease, opacity .28s ease;
+}
+
+/* эффект "смотрю вниз" */
+body.looking-down #stage{
+  transform: translateY(-15vh);
+  filter: blur(5px) brightness(.8);
 }
 
 /* ================================
-   CARDS / PANES
+   CARD / PANE
    ================================ */
 .pane .card{
-  background: var(--card);
+  position: relative;
+  background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
-  position: relative;
 }
 
 #desc{
@@ -100,13 +83,18 @@ body.ready .boot{
   flex-direction: column;
 }
 
-#bg{
+/* ФОН — через <img> */
+#bgImg{
   position: absolute;
   inset: 0;
-  background: center / cover no-repeat;
-  image-rendering: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;        /* чётко, без дымки */
+  object-position: center;
+  pointer-events: none;
 }
 
+/* ТЕКСТ СЦЕНЫ */
 #desc .text{
   position: relative;
   padding: 24px 26px 28px;
@@ -114,67 +102,10 @@ body.ready .boot{
   min-height: 160px;
 }
 
-/* подсказка "тап — показать сразу" */
-#desc .text::after{
-  content: "Нажми на текст, чтобы показать сразу";
-  display: block;
-  font-size: 12px;
-  color: var(--muted);
-  opacity: .55;
-  margin-top: 6px;
-}
+/* никаких подсказок про "нажми на текст" */
 
 /* ================================
-   HUD
-   ================================ */
-.hud{
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.timer{
-  margin-right: auto;
-  background: #101725;
-  border: 1px solid rgba(255,255,255,.08);
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  color: #d0d8ea;
-  opacity: .9;
-}
-
-.pill{
-  appearance: none;
-  border: 0;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: var(--btn-bg);
-  color: var(--ink);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
-  cursor: pointer;
-  transition: .2s transform, .2s background, .2s opacity;
-}
-
-.pill:hover{
-  transform: translateY(-1px);
-  background: var(--btn-bg-hover);
-}
-
-.pill-quiet{
-  opacity: .7;
-}
-
-.pill-quiet:hover{
-  opacity: 1;
-}
-
-/* ================================
-   OPTIONS
+   ПРАВАЯ КОЛОНКА: ОПЦИИ
    ================================ */
 .stack{
   display: flex;
@@ -187,74 +118,67 @@ body.ready .boot{
   display: block;
   padding: 18px 20px;
   border-radius: var(--radius);
-  background: var(--opt-bg);
+  background: var(--surface-2);
+  border: var(--border);
   box-shadow: var(--shadow);
-  border: 1px solid var(--opt-border);
-  cursor: pointer;
   color: #fff;
   text-align: left;
-  transition: .2s transform, .2s background, .2s border-color, .2s opacity;
+  cursor: pointer;
+  transition: .2s transform, .2s background, .2s opacity, .2s border-color;
 }
 
 .option:hover{
   transform: translateY(-2px);
-  background: var(--opt-bg-hover);
-}
-
-.option.req{
-  border-color: var(--opt-border-req);
-}
-
-.option.disabled{
-  display: none;
+  background: var(--surface-3);
 }
 
 /* ================================
-   DIALOGS
+   НИЖНЯЯ ПЛАТФОРМА HUD
    ================================ */
-dialog{
-  border: 0;
-  border-radius: 14px;
-  background: #0f141d;
-  color: var(--ink);
-  padding: 0;
-  box-shadow: var(--shadow);
-}
-
-dialog::backdrop{
-  background: rgba(0,0,0,.45);
-  backdrop-filter: blur(2px);
-}
-
-dialog .dlg-body{
-  padding: 20px 22px 12px;
-  min-width: 300px;
-  max-width: 92vw;
-  max-height: 72vh;
-  overflow: auto;
-}
-
-dialog .close{
+.hudbar{
   position: absolute;
-  right: 6px;
-  top: 6px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: 18px;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 12px;
+  background: rgba(8,12,20,.55);
+  border: var(--border);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+
+.timer{
+  margin-right: auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(16,23,37,.6);
+  border: 1px solid rgba(255,255,255,.06);
+  font-size: 13px;
+  color: #d0d8ea;
+}
+
+.hud-menu{
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: var(--border);
+  background: var(--surface-2);
+  color: var(--ink);
   cursor: pointer;
-}
-
-.list{
+  font-size: 20px;
+  line-height: 1;
   display: grid;
-  gap: 8px;
-  margin-top: 8px;
-  font-size: 14px;
-  color: #d7dbe6;
+  place-items: center;
+  box-shadow: var(--shadow);
+  transition: .2s transform, .2s background, .2s opacity;
 }
 
-.list .muted{
-  color: var(--muted);
+.hud-menu:hover{
+  transform: translateY(-1px);
+  background: var(--surface-3);
 }
 
 /* ================================
@@ -264,18 +188,17 @@ dialog .close{
   position: fixed;
   inset: 0;
   background: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   z-index: 10000;
 }
 
 .boot-box{
   width: min(520px, 92vw);
-  background: #0f141d;
-  border: 1px solid rgba(255,255,255,.06);
+  background: var(--surface);
+  border: var(--border);
   border-radius: 16px;
-  padding: 22px 22px 16px;
+  padding: 22px;
   box-shadow: var(--shadow);
 }
 
@@ -286,7 +209,7 @@ dialog .close{
 
 .boot-progress{
   height: 10px;
-  background: var(--boot-track);
+  background: #0b111a;
   border-radius: 999px;
   overflow: hidden;
   margin: 10px 0;
@@ -306,88 +229,99 @@ dialog .close{
   color: var(--muted);
 }
 
-.boot-tip{
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--muted);
-  opacity: .8;
-}
+/* скрыть после готовности */
+body.ready .boot{ display: none; }
 
 /* ================================
-   EYELIDS
-   ================================ */
-.eyelid{
-  position: fixed;
-  left: 0;
-  right: 0;
-  height: 0;
-  background: #000;
-  z-index: 9999;
-  transition: height .18s ease;
-  pointer-events: none;
-}
-
-.eyelid.top{
-  top: 0;
-}
-
-.eyelid.bot{
-  bottom: 0;
-}
-
-/* ================================
-   OVERLAY (меню/регистрация)
+   OVERLAYS
    ================================ */
 .overlay{
   position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
-  background: rgba(0,0,0,.5);
+  background: rgba(0,0,0,.52);
   backdrop-filter: blur(2px);
   z-index: 10001;
 }
 
 .panel{
-  width: min(520px, 92vw);
-  background: var(--panel);
-  border: 1px solid rgba(255,255,255,.06);
+  width: min(560px, 92vw);
+  background: var(--surface);
+  border: var(--border);
   border-radius: 16px;
-  padding: 22px 22px 16px;
+  padding: 22px;
   box-shadow: var(--shadow);
 }
 
-.vstack{
+.panel.small{
+  width: min(420px, 92vw);
+}
+
+.brand{
+  margin: 0 0 16px 0;
+  font-size: 32px;
+  text-align: center;
+}
+
+.menu-col{
   display: grid;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
 }
 
-.btn{
+.cta{
+  width: 100%;
   appearance: none;
-  border: 0;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--btn-bg);
+  border: var(--border);
+  padding: 18px 24px;
+  border-radius: 999px;
+  background: var(--surface-2);
   color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
   cursor: pointer;
-  transition: .2s transform, .2s background, .2s opacity;
-  text-align: left;
+  transition: .2s transform, .2s background;
+  text-align: center;
 }
 
-.btn:hover{
+.cta:hover{
   transform: translateY(-1px);
-  background: var(--btn-bg-hover);
+  background: var(--surface-3);
 }
 
-.btn-quiet{
-  opacity: .9;
+.cta.ghost{
+  font-weight: 500;
+  opacity: .95;
 }
 
+.menu-bottom{
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.round{
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: var(--border);
+  background: var(--surface-2);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: .2s transform, .2s background;
+}
+
+.round:hover{
+  transform: translateY(-1px);
+  background: var(--surface-3);
+}
+
+/* Регистрация */
 .form{
   display: grid;
   gap: 12px;
-  margin-top: 8px;
 }
 
 label{
@@ -397,84 +331,85 @@ label{
   color: #c8d1e3;
 }
 
-input,
-select{
+input, select{
   appearance: none;
-  background: var(--input);
+  background: #0a0f18;
   color: var(--ink);
-  border: 1px solid var(--input-border);
+  border: var(--border);
   border-radius: 10px;
-  padding: 10px 12px;
+  padding: 12px 12px;
   outline: none;
 }
 
-.form-row{
+.dual{
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 8px;
-  align-items: center;
 }
 
-.muted{
+.btn{
+  appearance: none;
+  border: var(--border);
+  background: var(--surface-2);
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: .2s transform, .2s background, .2s opacity;
+}
+
+.btn:hover{
+  transform: translateY(-1px);
+  background: var(--surface-3);
+}
+
+.btn.quiet{ opacity: .9; }
+.btn.danger{ background: #1f2636; border-color: rgba(255,80,80,.35); }
+
+.muted{ color: var(--muted); font-size: 13px; }
+
+/* Внутреннее меню */
+.vstack{ display: grid; gap: 10px; }
+
+/* Диалоги */
+dialog{
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0;
+  box-shadow: var(--shadow);
+}
+dialog::backdrop{ background: rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+dialog .dlg-body{ padding: 20px 22px 12px; min-width: 300px; max-width: 92vw; max-height: 72vh; overflow: auto; }
+dialog .close{
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  border: 0;
+  background: transparent;
   color: var(--muted);
-  font-size: 13px;
-  opacity: .9;
+  font-size: 18px;
+  cursor: pointer;
 }
 
-/* ================================
-   ANIMATIONS
-   ================================ */
-.option.enter{
-  animation: fade-in-up .28s ease both;
-}
+.list{ display: grid; gap: 8px; margin-top: 8px; font-size: 14px; color: #d7dbe6; }
 
-.options-exit .option:not(.chosen){
-  animation: fade-out .22s ease forwards;
+/* Веки */
+.eyelid{
+  position: fixed;
+  left: 0; right: 0;
+  height: 0;
+  background: #000;
+  z-index: 9999;
+  transition: height .18s ease;
+  pointer-events: none;
 }
+.eyelid.top{ top: 0; }
+.eyelid.bot{ bottom: 0; }
 
-.option.chosen{
-  animation: bump .16s ease both, fly-out .34s .18s ease forwards;
-}
-
-@keyframes fade-in-up{
-  from{
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to{
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes fade-out{
-  to{
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-}
-
-@keyframes bump{
-  from{
-    transform: scale(1);
-  }
-  to{
-    transform: scale(1.05);
-  }
-}
-
-@keyframes fly-out{
-  to{
-    transform: translateX(42px);
-    opacity: 0;
-  }
-}
-
-/* ================================
-   RESPONSIVE
-   ================================ */
+/* Респонсив */
 @media (max-width: 980px){
-  .stage{
-    grid-template-columns: 1fr;
-  }
+  .stage{ grid-template-columns: 1fr; }
+  .dual{ grid-template-columns: 1fr; } /* регистрация в 2 строки на мобилке */
 }
