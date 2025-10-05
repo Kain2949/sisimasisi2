@@ -492,4 +492,117 @@ function startHeartbeat(){
     document.body.classList.add("ready");
     $descText.textContent = "Не удалось загрузить игру. Обнови страницу.";
   }
+
+// === API конфиг ===
+const API_BASE = "https://kristan-labored-earsplittingly.ngrok-free.dev"; // ← поставь свой ngrok адрес
+const API_KEY  = "super_secret_key_3481gfej83f";                      // ← тот же WEB_SECRET_KEY, что в bwa.py
+
+async function api(path, body) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-KEY": API_KEY
+    },
+    body: JSON.stringify(body || {})
+  });
+  return res.json();
+}
+async function apiStatus(regId) {
+  const res = await fetch(`${API_BASE}/api/registration/status?reg_id=${encodeURIComponent(regId)}`, {
+    headers: { "X-API-KEY": API_KEY }
+  });
+  return res.json();
+}
+
+// === Регистрация ===
+let REG_ID = null;
+let REG_STATUS_TIMER = null;
+
+async function sendCodeByTag() {
+  const nick   = document.querySelector("#reg-nick").value.trim();
+  const tag    = document.querySelector("#reg-tag").value.trim();
+  const gender = document.querySelector("#reg-gender").value || "m";
+  const hint   = document.querySelector("#reg-hint");
+
+  if (!tag.startsWith("@")) {
+    hint.textContent = "Укажи тег с @, например @username.";
+    return;
+  }
+
+  hint.textContent = "Отправляю...";
+  const resp = await api("/api/registration/start", { tag, nickname: nick, gender });
+  if (!resp.ok) {
+    if (resp.reason === "already_verified") {
+      hint.textContent = "Ты уже верифицирован. Продолжай.";
+    } else if (resp.reason === "tag_must_start_with_at") {
+      hint.textContent = "Тег должен начинаться с @.";
+    } else {
+      hint.textContent = "Не получилось: " + (resp.reason || "ошибка");
+    }
+    return;
+  }
+
+  REG_ID = resp.reg_id;
+  hint.textContent = "Жду отправки кода...";
+  REG_STATUS_TIMER = setInterval(checkRegStatus, 1000);
+}
+
+async function checkRegStatus() {
+  if (!REG_ID) return;
+  const hint = document.querySelector("#reg-hint");
+  const s = await apiStatus(REG_ID);
+  if (!s.ok) return;
+
+  if (s.status === "code_sent") {
+    hint.textContent = "Код отправлен в Telegram владельцу тега. Введи его ниже.";
+  } else if (s.status === "bad_tag") {
+    clearInterval(REG_STATUS_TIMER);
+    hint.textContent = "Это не ваш тег. Бот не знает такого пользователя.";
+  } else if (s.status === "cannot_message") {
+    clearInterval(REG_STATUS_TIMER);
+    hint.textContent = "Бот не может написать этому пользователю.";
+  } else if (s.status === "expired") {
+    clearInterval(REG_STATUS_TIMER);
+    hint.textContent = "Код протух. Отправь заново.";
+  } else if (s.status === "locked") {
+    clearInterval(REG_STATUS_TIMER);
+    hint.textContent = "Много неверных попыток. Блок на час.";
+  } else if (s.status === "verified") {
+    clearInterval(REG_STATUS_TIMER);
+    hint.textContent = "Готово. Верификация пройдена.";
+  }
+}
+
+async function verifyCode() {
+  if (!REG_ID) return;
+  const code = document.querySelector("#reg-code").value.trim();
+  const hint = document.querySelector("#reg-hint");
+  if (!code || code.length !== 6) {
+    hint.textContent = "Введи 6 цифр.";
+    return;
+  }
+  const resp = await api("/api/registration/verify", { reg_id: REG_ID, code });
+  if (resp.ok) {
+    clearInterval(REG_STATUS_TIMER);
+    hint.textContent = "Верификация пройдена. Можно продолжать.";
+    // тут открой меню / разреши Начать игру
+  } else {
+    if (resp.reason === "bad_code") {
+      hint.textContent = `Неверный код. Осталось попыток: ${resp.left}`;
+    } else if (resp.reason === "locked") {
+      hint.textContent = "Блок на час за перебор неверных кодов.";
+    } else if (resp.reason === "expired") {
+      hint.textContent = "Код истёк. Отправь заново.";
+    } else {
+      hint.textContent = "Ошибка: " + resp.reason;
+    }
+  }
+}
+
+// привязываем обработчики к твоим кнопкам
+document.querySelector("#btn-send-code")?.addEventListener("click", sendCodeByTag);
+document.querySelector("#btn-verify")?.addEventListener("click", verifyCode);
+
+
 })();
