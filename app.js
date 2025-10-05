@@ -3,7 +3,7 @@ const tg = window.Telegram?.WebApp;
 if (tg) {
   try {
     tg.expand();
-    tg.setBackgroundColor("#070a0f");
+    tg.setBackgroundColor("#070a0f");   // не везде поддерживается — и ладно
     tg.setHeaderColor("secondary");
   } catch {}
 }
@@ -13,7 +13,6 @@ const $descText   = document.getElementById("descText");
 const $bg         = document.getElementById("bg");
 const $opts       = document.getElementById("options");
 
-const $boot       = document.getElementById("boot");
 const $bootBar    = document.getElementById("bootBar");
 const $bootPct    = document.getElementById("bootPct");
 const $bootCnt    = document.getElementById("bootCount");
@@ -32,6 +31,8 @@ const $flagsList  = document.getElementById("flagsList");
 
 // Config
 const IMG_BASE           = "images/";
+const SCENES_URL         = "scenes.json"; // живём на JSON
+const CACHE_KEY_SCENES   = "scenes_cache_v1";
 const TYPEWRITE_MAX_MS   = 3000;
 const HEARTBEAT_MS       = 15000;
 
@@ -66,12 +67,21 @@ function updateBoot(progress, loaded, total) {
   $bootCnt.textContent = `${loaded}/${total}`;
 }
 
-// Scenes source (требуется scenes.js)
-function loadScenesFromGlobal() {
-  if (!window.SCENES || typeof window.SCENES !== "object") {
-    throw new Error("SCENES не найден. Подключи scenes.js перед app.js");
+// ===== Scenes: JSON + локальный кэш =====
+async function fetchScenesJson() {
+  // пробуем сеть
+  try {
+    const res = await fetch(`${SCENES_URL}?v=4`, { cache: "no-cache" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    localStorage.setItem(CACHE_KEY_SCENES, JSON.stringify(data));
+    return data;
+  } catch (e) {
+    // если сеть не дала — из локального кэша
+    const cached = localStorage.getItem(CACHE_KEY_SCENES);
+    if (cached) return JSON.parse(cached);
+    throw e;
   }
-  return window.SCENES;
 }
 
 function uniqueImagesFromScenes(scenes) {
@@ -83,7 +93,7 @@ function uniqueImagesFromScenes(scenes) {
   return Array.from(set);
 }
 
-// Aggressive preloading (≤10s)
+// ===== Aggressive preloading (≤10s) =====
 function fastPreloadImages(names, onProgress) {
   let loaded = 0;
   const total = names.length;
@@ -118,7 +128,7 @@ function fastPreloadImages(names, onProgress) {
   });
 }
 
-// Background + transition
+// ===== Background + blink =====
 function setBackground(imageName, meta = {}) {
   if (!imageName) return;
 
@@ -141,7 +151,7 @@ async function blink(ms = 320) {
   $eyebot.style.height = "0";
 }
 
-// Typewriter (tap-to-skip)
+// ===== Typewriter (tap-to-skip) =====
 async function typewrite($node, text) {
   const s = String(text || "");
   $node.textContent = "";
@@ -163,7 +173,7 @@ async function typewrite($node, text) {
   }
 }
 
-// Options build
+// ===== Options =====
 function normalizeOptions(sc) {
   if (!sc) return [];
   if (Array.isArray(sc.options)) {
@@ -181,7 +191,7 @@ function normalizeOptions(sc) {
   return out;
 }
 
-// Inventory / Flags render
+// ===== Inventory / Flags =====
 function renderInventory() {
   const list = Object.entries(state.inventory || {}).filter(([, n]) => n > 0);
   if (!list.length) {
@@ -200,7 +210,7 @@ function renderFlags() {
   $flagsList.innerHTML = list.map(([k, v]) => `<div>${k}: ${String(v)}</div>`).join("");
 }
 
-// Save / Load local
+// ===== Save / Load local =====
 function saveLocal() {
   localStorage.setItem("game115", JSON.stringify({
     current: state.current,
@@ -215,7 +225,7 @@ function saveLocal() {
 function loadLocal() {
   try {
     const saved = JSON.parse(localStorage.getItem("game115") || "{}");
-    if (saved && state.scenes[saved.current]) {
+    if (saved && saved.current && saved.current in state.scenes) {
       state.current    = saved.current;
       state.inventory  = saved.inventory || {};
       state.flags      = saved.flags || {};
@@ -230,7 +240,7 @@ function loadLocal() {
   } catch {}
 }
 
-// Sync / Heartbeat
+// ===== Sync / Heartbeat =====
 let hbTimer = null;
 
 function syncState(reason = "auto") {
@@ -256,7 +266,7 @@ function startHeartbeat() {
   }, HEARTBEAT_MS);
 }
 
-// Render scene
+// ===== Render scene =====
 async function renderScene(key) {
   const sc = state.scenes[key];
   if (!sc) return;
@@ -309,17 +319,21 @@ async function renderScene(key) {
   saveLocal();
 }
 
-// Init
+// ===== Init =====
 (async function init(){
   try {
-    state.scenes = loadScenesFromGlobal();
+    // 1) грузим scenes.json (или из локального кэша)
+    state.scenes = await fetchScenesJson();
 
+    // 2) прелоадим фоны агрессивно, но не дольше 10 сек
     const imgs = uniqueImagesFromScenes(state.scenes);
     fastPreloadImages(imgs, updateBoot);
 
+    // 3) поднимаем локальный сейв, если валиден
     loadLocal();
     if (!state.startedAt) state.startedAt = new Date().toISOString();
 
+    // 4) ждём максимум 10 сек и стартуем игру
     const t0 = Date.now();
     while (!preloadDone && Date.now() - t0 < 10000) {
       await sleep(100);
