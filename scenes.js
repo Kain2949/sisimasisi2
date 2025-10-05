@@ -1432,3 +1432,4 @@ const SCENES = {
 }
 }
 };
+window.SCENES = SCENES;
