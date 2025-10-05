@@ -1,102 +1,114 @@
 :root{
   --bg:#0b0e13; --card:#11151d; --ink:#e6e6e6; --muted:#96a0b3;
   --accent:#304ffe; --accent-2:#6ee7ff;
-  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --shadow: 0 12px 32px rgba(0,0,0,.35);
   --radius: 18px;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0; background:var(--bg); color:var(--ink);
-  font:16px/1.55 system-ui, -apple-system, Segoe UI, Roboto;
+  font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial;
 }
-#app{ max-width:1200px; margin:24px auto; padding:0 16px;}
+
+/* загрузчик */
+.loader{
+  position:fixed; inset:0; display:flex; flex-direction:column; gap:8px;
+  align-items:center; justify-content:center; background:#0b0e13; z-index:9998;
+}
+.loader .logo{ font-size:28px; font-weight:800; letter-spacing:.5px; }
+.loader .hint{ color:var(--muted); }
+
+/* сцена */
+#app{ max-width:1200px; margin:20px auto; padding:0 16px;}
 .stage{ display:grid; grid-template-columns: 1fr 420px; gap:24px; }
-.pane .card {
-  background: none; /* убираем дымку */
+.pane .card{
+  background: var(--card);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
   position: relative;
-}
-
-#desc {
   min-height: 520px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
 }
 
-#bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-position: center center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  z-index: 0;
+/* фоны — двойной слой, без дымки */
+.bg{
+  position:absolute; inset:0;
+  background: center/cover no-repeat;
+  opacity:0; transition:opacity .18s ease;
 }
+.bg.show{ opacity:1; }
 
-#desc .text {
-  position: relative;
-  padding: 24px 26px 28px;
-  font-size: 18px;
-  min-height: 160px;
-  z-index: 1; /* текст поверх картинки */
-}
+#desc .text{ position:relative; padding:24px 26px 28px; font-size:18px; min-height:160px; }
+.typewriter{ display:inline; opacity:.9 }
+.typewriter.done{ opacity:1 }
 
+/* HUD */
 .hud{ position:absolute; right:16px; bottom:16px; display:flex; gap:10px; }
 .pill{
   appearance:none; border:0; padding:10px 14px; border-radius:999px;
-  background:#1b2230; color:var(--ink); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
-  cursor:pointer; transition: .2s transform, .2s background;
+  background:#1b2230; color:var(--ink);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+  cursor:pointer; transition:.2s transform, .2s background;
 }
 .pill:hover{ transform:translateY(-1px); background:#232c3e; }
-.pill-quiet{ opacity:.7 }
+.pill-quiet{ opacity:.75 }
 .pill-quiet:hover{ opacity:1 }
 
-.stack{ display:flex; flex-direction:column; gap:12px; }
+/* выборы */
+.stack{ display:flex; flex-direction:column; gap:12px; padding:12px; }
 .option{
-  display:block; 
-  padding:18px 20px; 
-  border-radius:var(--radius);
-  background:#161b25; 
-  box-shadow:var(--shadow); 
+  display:block; padding:18px 20px; border-radius:var(--radius);
+  background:#161b25; box-shadow:var(--shadow);
   border:1px solid rgba(255,255,255,.06);
-  cursor:pointer; 
-  transition:.2s transform, .2s background, .2s border-color, .2s opacity;
-  color: #fff;   /* вот эта строка исправит цвет текста */
+  cursor:pointer; transition:.2s transform, .2s background, .2s border-color, .2s opacity;
+  color:#fff; text-align:left;
 }
 .option:hover{ transform:translateY(-2px); background:#1b2230; }
 .option.req{ border-color: rgba(48,79,254,.45); }
-.option.disabled{ display:none; } /* скрываем недоступные, как просил */
+.option.disabled{ display:none; }
 
+/* плавающие кнопки */
+.fab{
+  position: fixed; right: 18px; bottom: 18px; display:flex; gap:12px; z-index: 40;
+}
+.fab-btn{
+  width:50px; height:50px; border-radius:50%; border:0; cursor:pointer;
+  background:#1b2230; box-shadow: var(--shadow); display:grid; place-items:center;
+  transition:.18s transform,.18s background;
+}
+.fab-btn:hover{ transform: translateY(-2px); background:#232c3e; }
+.fab-btn svg{ width:24px; height:24px; fill:#dfe6ff; opacity:.9 }
+
+/* модалки */
 dialog{ border:0; border-radius:14px; background:#0f141d; color:var(--ink); padding:0; box-shadow:var(--shadow); }
 dialog::backdrop{ background:rgba(0,0,0,.45); backdrop-filter: blur(2px); }
-dialog .dlg-body{ padding:20px 22px 12px; min-width:300px; }
-dialog .close{ position:absolute; right:6px; top:6px; border:0; background:transparent; color:var(--muted); font-size:18px; cursor:pointer;}
+dialog .dlg-body{ padding:20px 22px 18px; min-width:320px; position:relative; }
+dialog h3{ margin:0 0 12px 0; }
+dialog .close{
+  position:absolute; right:6px; top:6px; border:0; background:transparent; color:var(--muted);
+  font-size:18px; cursor:pointer;
+}
+label{ display:block; margin:10px 0; }
+input{
+  width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.08);
+  background:#121826; color:var(--ink);
+}
+.row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.gap{ margin-top:6px; }
+.muted{ color:var(--muted); font-size:12px; }
+
+/* моргание */
+.eyelid{ position:fixed; left:0; right:0; height:0; background:#000; z-index:9999; transition:height .18s ease; pointer-events:none; }
+.eyelid.top{ top:0 } .eyelid.bot{ bottom:0 }
+
+/* таймер */
+.timer{
+  position: fixed; right: 18px; top: 16px;
+  background: rgba(0,0,0,.35); padding:6px 10px; border-radius:10px; font-weight:700; font-size:14px;
+  backdrop-filter: blur(2px);
+}
 
 @media (max-width: 980px){
   .stage{ grid-template-columns:1fr; }
 }
-
-/* ===== Анимации выбора и появления ===== */
-.option.enter { animation: fade-in-up .28s ease both; }
-.options-exit .option:not(.chosen) { animation: fade-out .22s ease forwards; }
-.option.chosen { animation: bump .16s ease both, fly-out .34s .18s ease forwards; }
-
-@keyframes fade-in-up { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
-@keyframes fade-out    { to   { opacity:0; transform:translateY(-4px) } }
-@keyframes bump        { from { transform:scale(1) } to { transform:scale(1.05) } }
-@keyframes fly-out     { to   { transform:translateX(42px); opacity:0 } }
-
-/* ===== «Веки» для моргания ===== */
-.eyelid{ position:fixed; left:0; right:0; height:0; background:#000; z-index:9999; transition:height .18s ease; pointer-events:none; }
-.eyelid.top{ top:0 } .eyelid.bot{ bottom:0 }
-
-/* ===== Тайпрайтер текста ===== */
-.typewriter { display:inline; }
-.typewriter.done { display:inline; }

@@ -2,35 +2,117 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Ночная 115-я</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1" />
+  <title>Raf Game</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="app">
-    <div class="stage">
-      <div class="pane left">
-        <div id="desc" class="card">
-          <div class="image" id="bg"></div>
-          <div class="text" id="descText">Загрузка…</div>
-          <div class="hud">
-            <button id="btnInv" class="pill">Инвентарь</button>
-            <button id="btnFlags" class="pill">Флаги</button>
-            <button id="btnReset" class="pill pill-quiet" title="Новая игра">⟲</button>
-          </div>
+<div id="app">
+  <!-- Загрузочный экран -->
+  <div id="loader" class="loader">
+    <div class="logo">Raf Game</div>
+    <div class="hint">Загрузка мира…</div>
+  </div>
+
+  <!-- Сцена -->
+  <div class="stage">
+    <!-- Левая панель -->
+    <div class="pane">
+      <div class="card" id="desc">
+        <div id="bg1" class="bg"></div>
+        <div id="bg2" class="bg"></div>
+        <div class="text">
+          <div id="type" class="typewriter"></div>
+        </div>
+
+        <!-- мини-HUD -->
+        <div class="hud">
+          <button id="btnInv" class="pill">Инвентарь</button>
+          <button id="btnFlags" class="pill pill-quiet">Флаги</button>
         </div>
       </div>
-      <div class="pane right">
+    </div>
+
+    <!-- Правая панель (выборы) -->
+    <div class="pane">
+      <div class="card">
         <div id="options" class="stack"></div>
       </div>
     </div>
   </div>
 
-  <!-- Модалки -->
-  <dialog id="dlgInv"><div class="dlg-body"><h3>Инвентарь</h3><ul id="invList"></ul></div><button class="close">✕</button></dialog>
-  <dialog id="dlgFlags"><div class="dlg-body"><h3>Флаги</h3><ul id="flagsList"></ul></div><button class="close">✕</button></dialog>
+  <!-- маленькие кнопки справа снизу -->
+  <div class="fab">
+    <button id="btnSettings" class="fab-btn" title="Настройки" aria-label="Настройки">
+      <svg viewBox="0 0 24 24"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm9.4 4a7.4 7.4 0 00-.1-1l2-1.6-2-3.5-2.4 1a7.7 7.7 0 00-1.7-1l-.3-2.5H9.1l-.3 2.5a7.7 7.7 0 00-1.7 1l-2.4-1-2 3.5 2 1.6a7.4 7.4 0 000 2l-2 1.6 2 3.5 2.4-1c.5.4 1.1.7 1.7 1l.3 2.5h5.4l.3-2.5c.6-.3 1.2-.6 1.7-1l2.4 1 2-3.5-2-1.6c.1-.3.1-.7.1-1z"/></svg>
+    </button>
+    <button id="btnTrophy" class="fab-btn" title="Лидерборд" aria-label="Лидерборд">
+      <svg viewBox="0 0 24 24"><path d="M18 2H6v3H3v3c0 2.8 2.2 5 5 5h.1A6 6 0 0011 16v3H8v3h8v-3h-3v-3a6 6 0 002.9-3H16c2.8 0 5-2.2 5-5V5h-3V2zM5 8V7h1V5h2v4c0 1.7-1.3 3-3 3a3 3 0 01-3-3zm15 0a3 3 0 01-3 3c-1.7 0-3-1.3-3-3V5h2v2h1v1h3z"/></svg>
+    </button>
+  </div>
 
-  <script type="module" src="app.js"></script>
+  <!-- Модалка: инвентарь -->
+  <dialog id="dlgInv">
+    <div class="dlg-body">
+      <h3>Инвентарь</h3>
+      <div id="invList" class="list"></div>
+      <button class="close" onclick="document.getElementById('dlgInv').close()">✕</button>
+    </div>
+  </dialog>
+
+  <!-- Модалка: флаги -->
+  <dialog id="dlgFlags">
+    <div class="dlg-body">
+      <h3>Флаги</h3>
+      <div id="flagList" class="list"></div>
+      <button class="close" onclick="document.getElementById('dlgFlags').close()">✕</button>
+    </div>
+  </dialog>
+
+  <!-- Модалка: настройки -->
+  <dialog id="dlgSettings">
+    <div class="dlg-body">
+      <h3>Настройки</h3>
+      <label class="sw"><input type="checkbox" id="optBlink"> Отключить моргание</label>
+      <label class="sw"><input type="checkbox" id="optType"> Отключить эффект печати</label>
+      <button class="close" onclick="document.getElementById('dlgSettings').close()">✕</button>
+    </div>
+  </dialog>
+
+  <!-- Модалка: регистрация -->
+  <dialog id="dlgReg">
+    <div class="dlg-body">
+      <h3>Регистрация</h3>
+      <label>Никнейм<br><input id="regNick" maxlength="20" placeholder="Придумай ник"></label>
+      <label>Твой Telegram-тег<br><input id="regTag" readonly></label>
+      <div class="row">
+        <label><input type="radio" name="rg" value="male" checked> Мужчина</label>
+        <label><input type="radio" name="rg" value="female"> Женщина</label>
+      </div>
+      <div class="row gap">
+        <button id="btnGetCode" class="pill">Получить код</button>
+        <button id="btnNewCode" class="pill pill-quiet">Новый код</button>
+      </div>
+      <label>Код из Telegram<br><input id="regCode" inputmode="numeric" maxlength="6" placeholder="123456"></label>
+      <div class="row gap">
+        <button id="btnVerify" class="pill">Подтвердить</button>
+      </div>
+      <small class="muted">
+        Код действует 10 минут. Новый код можно запросить раз в 15 минут. 5 неверных — блокировка на час.
+      </small>
+      <button class="close" onclick="/* запретим закрывать до верификации */">✕</button>
+    </div>
+  </dialog>
+
+  <!-- Веки для “моргания” -->
+  <div class="eyelid top"></div>
+  <div class="eyelid bot"></div>
+
+  <!-- Таймер -->
+  <div id="timer" class="timer">00:00</div>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
