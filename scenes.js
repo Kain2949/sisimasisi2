@@ -1430,4 +1430,5 @@ const SCENES = {
     "Вернуться": "to_corridors"
   }
 }
+}
 };
