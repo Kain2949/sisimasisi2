@@ -1,23 +1,83 @@
+/* ================================
+   THEME
+   ================================ */
 :root{
-  --bg:#0b0e13; --card:#11151d; --ink:#e6e6e6; --muted:#96a0b3;
-  --accent:#304ffe; --accent-2:#6ee7ff;
-  --shadow: 0 10px 30px rgba(0,0,0,.35);
-  --radius: 18px;
+  --bg:               #070a0f;
+  --card:             #0f131b;
+  --ink:              #e9edf4;
+  --muted:            #9aa6bd;
+
+  --accent:           #304ffe;
+  --accent-2:         #6ee7ff;
+
+  --shadow:           0 10px 30px rgba(0,0,0,.35);
+  --radius:           18px;
+
+  --btn-bg:           #121827;
+  --btn-bg-hover:     #172135;
+
+  --opt-bg:           #121720;
+  --opt-bg-hover:     #161c28;
+  --opt-border:       rgba(255,255,255,.06);
+  --opt-border-req:   rgba(48,79,254,.45);
+
+  --boot-track:       #151a24;
 }
-*{box-sizing:border-box}
-html,body{height:100%}
+
+/* ================================
+   BASE
+   ================================ */
+*{
+  box-sizing: border-box;
+}
+
+html,
 body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font:16px/1.55 system-ui, -apple-system, Segoe UI, Roboto;
+  height: 100%;
 }
 
-/* Прячем сцену, пока идёт прелоад */
-body.booting .stage{ opacity:0; pointer-events:none; }
-body.ready .boot{ opacity:0; pointer-events:none; transition:opacity .25s ease; }
-body.ready .boot{ display:none; } /* после first paint JS уберёт .boot полностью */
+body{
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Arial;
+}
 
-#app{ max-width:1200px; margin:24px auto; padding:0 16px;}
-.stage{ display:grid; grid-template-columns: 1fr 420px; gap:24px; transition:opacity .25s ease; }
+/* Прячем сцену во время прелоада */
+body.booting .stage{
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.ready .boot{
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease;
+}
+
+body.ready .boot{
+  display: none;
+}
+
+/* ================================
+   LAYOUT
+   ================================ */
+#app{
+  max-width: 1200px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.stage{
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  transition: opacity .25s ease;
+}
+
+/* ================================
+   CARD / PANES
+   ================================ */
 .pane .card{
   background: var(--card);
   border-radius: var(--radius);
@@ -26,89 +86,288 @@ body.ready .boot{ display:none; } /* после first paint JS уберёт .boo
   position: relative;
 }
 
-#desc{ min-height:520px; display:flex; flex-direction:column; }
+#desc{
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
 #bg{
-  position:absolute; inset:0;
-  /* важно: чистый фон, без "дымки"/фильтров */
+  position: absolute;
+  inset: 0;
   background: center / cover no-repeat;
   image-rendering: auto;
 }
-#desc .text{ position:relative; padding:24px 26px 28px; font-size:18px; min-height:160px; }
 
-.hud{ position:absolute; right:16px; bottom:16px; display:flex; gap:10px; }
+#desc .text{
+  position: relative;
+  padding: 24px 26px 28px;
+  font-size: 18px;
+  min-height: 160px;
+}
+
+/* Подсказка "тап — показать сразу" */
+#desc .text::after{
+  content: "Нажми на текст, чтобы показать сразу";
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  opacity: .55;
+  margin-top: 6px;
+}
+
+/* ================================
+   HUD
+   ================================ */
+.hud{
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  gap: 10px;
+}
+
 .pill{
-  appearance:none; border:0; padding:10px 14px; border-radius:999px;
-  background:#1b2230; color:var(--ink); box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
-  cursor:pointer; transition: .2s transform, .2s background;
+  appearance: none;
+  border: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--btn-bg);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+  cursor: pointer;
+  transition: .2s transform, .2s background, .2s opacity;
 }
-.pill:hover{ transform:translateY(-1px); background:#232c3e; }
-.pill-quiet{ opacity:.7 }
-.pill-quiet:hover{ opacity:1 }
 
-.stack{ display:flex; flex-direction:column; gap:12px; padding:16px; }
+.pill:hover{
+  transform: translateY(-1px);
+  background: var(--btn-bg-hover);
+}
+
+.pill-quiet{
+  opacity: .7;
+}
+
+.pill-quiet:hover{
+  opacity: 1;
+}
+
+/* ================================
+   OPTIONS
+   ================================ */
+.stack{
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
 .option{
-  display:block;
-  padding:18px 20px;
-  border-radius:var(--radius);
-  background:#161b25;
-  box-shadow:var(--shadow);
-  border:1px solid rgba(255,255,255,.06);
-  cursor:pointer;
-  transition:.2s transform, .2s background, .2s border-color, .2s opacity;
-  color:#fff;
-  text-align:left;
-}
-.option:hover{ transform:translateY(-2px); background:#1b2230; }
-.option.req{ border-color: rgba(48,79,254,.45); }
-.option.disabled{ display:none; }
-
-/* Диалоги, если понадобится */
-dialog{ border:0; border-radius:14px; background:#0f141d; color:var(--ink); padding:0; box-shadow:var(--shadow); }
-dialog::backdrop{ background:rgba(0,0,0,.45); backdrop-filter: blur(2px); }
-dialog .dlg-body{ padding:20px 22px 12px; min-width:300px; }
-dialog .close{ position:absolute; right:6px; top:6px; border:0; background:transparent; color:var(--muted); font-size:18px; cursor:pointer;}
-
-/* Адаптив */
-@media (max-width: 980px){
-  .stage{ grid-template-columns:1fr; }
+  display: block;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--opt-bg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--opt-border);
+  cursor: pointer;
+  color: #fff;
+  text-align: left;
+  transition: .2s transform, .2s background, .2s border-color, .2s opacity;
 }
 
-/* Анимации появления/выбора */
-.option.enter { animation: fade-in-up .28s ease both; }
-.options-exit .option:not(.chosen) { animation: fade-out .22s ease forwards; }
-.option.chosen { animation: bump .16s ease both, fly-out .34s .18s ease forwards; }
+.option:hover{
+  transform: translateY(-2px);
+  background: var(--opt-bg-hover);
+}
 
-@keyframes fade-in-up { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
-@keyframes fade-out    { to   { opacity:0; transform:translateY(-4px) } }
-@keyframes bump        { from { transform:scale(1) } to { transform:scale(1.05) } }
-@keyframes fly-out     { to   { transform:translateX(42px); opacity:0 } }
+.option.req{
+  border-color: var(--opt-border-req);
+}
 
-/* «Веки» для моргания */
-.eyelid{ position:fixed; left:0; right:0; height:0; background:#000; z-index:9999; transition:height .18s ease; pointer-events:none; }
-.eyelid.top{ top:0 } .eyelid.bot{ bottom:0 }
+.option.disabled{
+  display: none;
+}
 
-/* Тайпрайтер */
-.typewriter { display:inline; }
-.typewriter.done { display:inline; }
+/* ================================
+   DIALOGS
+   ================================ */
+dialog{
+  border: 0;
+  border-radius: 14px;
+  background: #0f141d;
+  color: var(--ink);
+  padding: 0;
+  box-shadow: var(--shadow);
+}
 
-/* Загрузчик с прогрессом */
+dialog::backdrop{
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(2px);
+}
+
+dialog .dlg-body{
+  padding: 20px 22px 12px;
+  min-width: 300px;
+  max-width: 92vw;
+  max-height: 72vh;
+  overflow: auto;
+}
+
+dialog .close{
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.list{
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 14px;
+  color: #d7dbe6;
+}
+
+.list .muted{
+  color: var(--muted);
+}
+
+/* ================================
+   BOOT
+   ================================ */
 .boot{
-  position:fixed; inset:0; background:var(--bg);
-  display:flex; align-items:center; justify-content:center; z-index:10000;
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
 }
+
 .boot-box{
-  width:min(520px, 92vw);
-  background:#0f141d;
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:16px; padding:22px 22px 16px;
-  box-shadow:var(--shadow);
+  width: min(520px, 92vw);
+  background: #0f141d;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+  padding: 22px 22px 16px;
+  box-shadow: var(--shadow);
 }
-.boot-title{ font-weight:700; margin-bottom:12px; }
-.boot-progress{ height:10px; background:#151a24; border-radius:999px; overflow:hidden; margin:10px 0; }
+
+.boot-title{
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.boot-progress{
+  height: 10px;
+  background: var(--boot-track);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
 .boot-progress > #bootBar{
-  height:100%; width:0%;
-  background:linear-gradient(90deg, var(--accent), var(--accent-2));
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   transition: width .15s ease;
 }
-.boot-meta{ display:flex; gap:8px; font-size:13px; color:var(--muted); }
-.boot-tip{ margin-top:10px; font-size:12px; color:var(--muted); opacity:.8; }
+
+.boot-meta{
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.boot-tip{
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  opacity: .8;
+}
+
+/* ================================
+   EYELIDS
+   ================================ */
+.eyelid{
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 0;
+  background: #000;
+  z-index: 9999;
+  transition: height .18s ease;
+  pointer-events: none;
+}
+
+.eyelid.top{
+  top: 0;
+}
+
+.eyelid.bot{
+  bottom: 0;
+}
+
+/* ================================
+   ANIMATIONS
+   ================================ */
+.option.enter{
+  animation: fade-in-up .28s ease both;
+}
+
+.options-exit .option:not(.chosen){
+  animation: fade-out .22s ease forwards;
+}
+
+.option.chosen{
+  animation: bump .16s ease both, fly-out .34s .18s ease forwards;
+}
+
+@keyframes fade-in-up{
+  from{
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to{
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-out{
+  to{
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes bump{
+  from{
+    transform: scale(1);
+  }
+  to{
+    transform: scale(1.05);
+  }
+}
+
+@keyframes fly-out{
+  to{
+    transform: translateX(42px);
+    opacity: 0;
+  }
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+@media (max-width: 980px){
+  .stage{
+    grid-template-columns: 1fr;
+  }
+}

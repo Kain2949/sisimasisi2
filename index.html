@@ -4,30 +4,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Ночная 115-я</title>
+
   <link rel="preconnect" href="https://telegram.org" />
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="booting">
   <div id="app">
     <div class="stage">
-      <!-- Левая область с фоном и текстом -->
+      <!-- Левая область: фон + текст -->
       <div class="pane">
         <div class="card" id="desc">
           <div id="bg" aria-hidden="true"></div>
+
           <div class="text">
             <span id="descText">Загрузка…</span>
           </div>
 
-          <!-- HUD справа снизу (можно позже дополнять) -->
           <div class="hud">
-            <button class="pill pill-quiet" id="invBtn">Инвентарь</button>
-            <button class="pill pill-quiet" id="flagsBtn">Флаги</button>
+            <button class="pill pill-quiet" id="invBtn" type="button">Инвентарь</button>
+            <button class="pill pill-quiet" id="flagsBtn" type="button">Флаги</button>
           </div>
         </div>
       </div>
 
-      <!-- Правая колонка — варианты -->
+      <!-- Правая колонка: варианты -->
       <div class="pane">
         <div class="card">
           <div class="stack" id="options"></div>
@@ -36,17 +38,24 @@
     </div>
   </div>
 
-  <!-- Загрузочный экран с прогрессом прелоада изображений -->
-  <div id="boot" class="boot">
+  <!-- Экран загрузки -->
+  <div id="boot" class="boot" aria-live="polite">
     <div class="boot-box">
       <div class="boot-title">Готовлю фон…</div>
-      <div class="boot-progress"><div id="bootBar"></div></div>
+
+      <div class="boot-progress">
+        <div id="bootBar"></div>
+      </div>
+
       <div class="boot-meta">
         <span id="bootPct">0%</span>
         <span>·</span>
         <span id="bootCount">0/0</span>
       </div>
-      <div class="boot-tip">Если видишь это долго — проверь интернет или перезайди.</div>
+
+      <div class="boot-tip">
+        Если это висит дольше 10 сек — игра всё равно стартует, просто фон догрузится чуть позже.
+      </div>
     </div>
   </div>
 
@@ -54,6 +63,25 @@
   <div class="eyelid top" id="eyelidTop"></div>
   <div class="eyelid bot" id="eyelidBot"></div>
 
+  <!-- Модалки -->
+  <dialog id="invDlg">
+    <button class="close" id="invClose" aria-label="Закрыть">✕</button>
+    <div class="dlg-body">
+      <h3>Инвентарь</h3>
+      <div id="invList" class="list"></div>
+    </div>
+  </dialog>
+
+  <dialog id="flagsDlg">
+    <button class="close" id="flagsClose" aria-label="Закрыть">✕</button>
+    <div class="dlg-body">
+      <h3>Флаги</h3>
+      <div id="flagsList" class="list"></div>
+    </div>
+  </dialog>
+
+  <!-- ВАЖНО: scenes.js должен идти ПЕРЕД app.js -->
+  <script src="scenes.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
