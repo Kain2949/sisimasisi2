@@ -1,6 +1,6 @@
 /* Raf game — WebApp (сцены из scenes.json) */
 
-const APP_BUILD = 7; // при смене числа фронт сам очистит старый локальный сейв
+const APP_BUILD = 7;
 
 // Telegram
 const tg = window.Telegram?.WebApp;
@@ -14,7 +14,6 @@ if (tg) {
 
 // DOM
 const $stage       = document.getElementById("stage");
-
 const $descText    = document.getElementById("descText");
 const $bgImg       = document.getElementById("bgImg");
 const $opts        = document.getElementById("options");
@@ -36,7 +35,7 @@ const $flagsClose  = document.getElementById("flagsClose");
 const $invList     = document.getElementById("invList");
 const $flagsList   = document.getElementById("flagsList");
 
-// overlay (главное меню/регистрация)
+// overlay
 const $overlay     = document.getElementById("overlay");
 const $menuPanel   = document.getElementById("menuPanel");
 const $regPanel    = document.getElementById("regPanel");
@@ -60,6 +59,28 @@ const $gmFlags       = document.getElementById("gmFlags");
 const $gmSaveExit    = document.getElementById("gmSaveExit");
 const $gmBack        = document.getElementById("gmBack");
 
+// === API конфиг ===
+const API_BASE = "https://kristan-labored-earsplittingly.ngrok-free.dev";
+const API_KEY  = "super_secret_key_3481gfej83f";
+
+async function api(path, body) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-KEY": API_KEY
+    },
+    body: JSON.stringify(body || {})
+  });
+  return res.json();
+}
+async function apiStatus(regId) {
+  const res = await fetch(`${API_BASE}/api/registration/status?reg_id=${encodeURIComponent(regId)}`, {
+    headers: { "X-API-KEY": API_KEY }
+  });
+  return res.json();
+}
+
 // Config
 const IMG_BASE = "images/";
 const SCENES_URL = "scenes.json";
@@ -81,7 +102,7 @@ const state = {
   elapsedSec: 0,
   running: false,
   tick: null,
-  auth: { verified:false, nickname:"", tag:"", gender:"m", pendingCode:"" }
+  auth: { verified:false, nickname:"", tag:"", gender:"m" }
 };
 
 const imageCache = {};
@@ -89,9 +110,7 @@ let preloadDone = false;
 
 // Utils
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const send  = (event, payload) => {
-  if (tg?.sendData) tg.sendData(JSON.stringify({ event, payload }));
-};
+const send  = (event, payload) => { if (tg?.sendData) tg.sendData(JSON.stringify({ event, payload })); };
 
 const fmtTime = sec => {
   const m = Math.floor(sec/60);
@@ -108,7 +127,6 @@ function startTimer(){
     $timer.textContent = fmtTime(state.elapsedSec);
   }, 1000);
 }
-
 function pauseTimer(){ state.running = false; }
 
 // Boot progress
@@ -163,7 +181,7 @@ function fastPreload(names, onp){
 }
 
 async function blink(ms=320){
-  document.body.offsetTop; // reflow
+  document.body.offsetTop;
   $eyetop.style.height = "52%";
   $eyebot.style.height = "52%";
   await sleep(ms);
@@ -176,7 +194,7 @@ function setBackground(name, meta={}){
   const url = IMG_BASE + name + `?v=${APP_BUILD}`;
   if ($bgImg.dataset.src === url) return;
   $bgImg.dataset.src = url;
-  $bgImg.src = url; // <img> — надёжно в WebView
+  $bgImg.src = url;
   if (meta.fit === "contain"){
     $bgImg.style.objectFit = "contain";
     $bgImg.style.backgroundColor = "#06080c";
@@ -188,12 +206,11 @@ function setBackground(name, meta={}){
   state.lastBg = url;
 }
 
-// Typewriter (без подсказок)
+// Typewriter
 async function typewrite(node, text){
   const s = String(text||"");
   node.textContent = "";
   if (!s.length) return;
-
   let stop=false;
   const onTap = () => { stop=true; };
   node.addEventListener("pointerdown", onTap, { once:true });
@@ -202,7 +219,6 @@ async function typewrite(node, text){
   for(let i=0;i<s.length;i++){
     if (stop){ node.textContent = s; break; }
     node.textContent += s[i];
-    // eslint-disable-next-line no-await-in-loop
     await sleep(per);
   }
 }
@@ -241,11 +257,10 @@ function saveLocal(){
     elapsedSec: state.elapsedSec
   }));
 }
-
 function loadLocal(){
   try{
     const saved = JSON.parse(localStorage.getItem(LS_SAVE)||"{}");
-    if (saved.build !== APP_BUILD) return; // билд поменялся — начинаем заново
+    if (saved.build !== APP_BUILD) return;
     if (saved && saved.current){
       state.current = saved.current;
       state.inventory = saved.inventory||{};
@@ -268,55 +283,48 @@ function loadAuth(){
       verified: !!a.verified,
       nickname: a.nickname||"",
       tag: a.tag||"",
-      gender: a.gender||"m",
-      pendingCode: ""
+      gender: a.gender||"m"
     };
   }catch{}
 }
 
+// Overlay
 function showOverlay(panel){
-  // показать overlay и конкретную панель
   $menuPanel.classList.add("hidden");
   $regPanel.classList.add("hidden");
   if (panel) panel.classList.remove("hidden");
   $overlay.classList.remove("hidden");
   pauseTimer();
 }
-
 function hideOverlay(){
   $overlay.classList.add("hidden");
   startTimer();
 }
-
 function openMainMenu(){
-  // доступность кнопок
   $btnStart.disabled = !state.auth.verified;
   const hasSave = !!(localStorage.getItem(LS_SAVE));
   $btnContinue.disabled = !hasSave;
   showOverlay($menuPanel);
 }
-
 function openRegistration(){
-  $regNick.value = state.auth.nickname||"";
-  $regTag.value  = state.auth.tag||"";
+  $regNick.value   = state.auth.nickname||"";
+  $regTag.value    = state.auth.tag||"";
   $regGender.value = state.auth.gender||"m";
   $regMsg.textContent = "";
   showOverlay($regPanel);
 }
-
 function openIngameMenu(){
   pauseTimer();
-  document.body.classList.add("looking-down"); // анимация «смотрю вниз»
+  document.body.classList.add("looking-down");
   $ingameOverlay.classList.remove("hidden");
 }
-
 function closeIngameMenu(){
   $ingameOverlay.classList.add("hidden");
   document.body.classList.remove("looking-down");
   startTimer();
 }
 
-// Handlers: main menu
+// Main menu handlers
 $btnStart?.addEventListener("click", () => {
   if (!state.auth.verified) return;
   state.startedAt = new Date().toISOString();
@@ -326,54 +334,113 @@ $btnStart?.addEventListener("click", () => {
   renderScene("start");
   send("start_new", {});
 });
-
 $btnContinue?.addEventListener("click", () => {
   hideOverlay();
   const has = state.current && state.current in state.scenes;
   renderScene(has ? state.current : "start");
   send("continue_game", {});
 });
+$btnSettings?.addEventListener("click", () => alert("Настройки позже."));
+$btnLeaderboard?.addEventListener("click", () => alert("Лидерборд доступен командой /top у бота."));
 
-$btnSettings?.addEventListener("click", () => {
-  alert("Настройки позже.");
-});
-$btnLeaderboard?.addEventListener("click", () => {
-  alert("Лидерборд доступен командой /top у бота.");
-});
+// === Регистрация через API ===
+let REG_ID = null;
+let REG_STATUS_TIMER = null;
 
-// Registration
-function genCode6(){ return String(Math.floor(100000 + Math.random()*900000)); }
-
-$btnSendCode?.addEventListener("click", () => {
+$btnSendCode?.addEventListener("click", async () => {
   const nickname = ($regNick.value||"").trim();
-  const tag = ($regTag.value||"").trim().replace(/^@+/, "");
-  const gender = $regGender.value;
+  let tag = ($regTag.value||"").trim();
+  const gender = $regGender.value || "m";
 
   if (!nickname || !tag){ $regMsg.textContent = "Укажи ник и тег."; return; }
+  if (!tag.startsWith("@")) tag = "@"+tag;
 
-  const code = genCode6();
   state.auth.nickname = nickname;
   state.auth.tag = tag;
   state.auth.gender = gender;
-  state.auth.pendingCode = code;
   saveAuth();
 
-  send("request_code", { nickname, tag, gender, code });
-  $regMsg.textContent = "Код отправлен тебе в Telegram.";
+  $regMsg.textContent = "Отправляю...";
+  try{
+    const resp = await api("/api/registration/start", { tag, nickname, gender });
+    if (!resp.ok){
+      if (resp.reason === "already_verified"){
+        state.auth.verified = true; saveAuth();
+        $regMsg.textContent = "Ты уже верифицирован. Открываю меню…";
+        openMainMenu();
+        return;
+      }
+      if (resp.reason === "tag_must_start_with_at"){
+        $regMsg.textContent = "Тег должен начинаться с @.";
+        return;
+      }
+      $regMsg.textContent = "Не получилось: " + (resp.reason || "ошибка");
+      return;
+    }
+    REG_ID = resp.reg_id;
+    $regMsg.textContent = "Жду отправки кода…";
+    if (REG_STATUS_TIMER) clearInterval(REG_STATUS_TIMER);
+    REG_STATUS_TIMER = setInterval(checkRegStatus, 1000);
+  }catch(e){
+    console.error(e);
+    $regMsg.textContent = "Сеть не отвечает.";
+  }
 });
 
-$btnVerify?.addEventListener("click", () => {
-  const inCode = ($regCode.value||"").trim();
-  if (!state.auth.pendingCode){ $regMsg.textContent = "Сначала отправь код."; return; }
-  if (inCode !== state.auth.pendingCode){ $regMsg.textContent = "Неверный код."; return; }
-  if (state.auth.gender === "f"){ $regMsg.textContent = "Сейчас доступна только мужская ветка."; return; }
+async function checkRegStatus(){
+  if (!REG_ID) return;
+  try{
+    const s = await apiStatus(REG_ID);
+    if (!s.ok) return;
 
-  state.auth.verified = true;
-  state.auth.pendingCode = "";
-  saveAuth();
-  send("verify_code", { ok:true });
+    if (s.status === "code_sent"){
+      $regMsg.textContent = "Код отправлен в Telegram владельцу тега. Введи его ниже.";
+    } else if (s.status === "bad_tag"){
+      clearInterval(REG_STATUS_TIMER);
+      $regMsg.textContent = "Это не ваш тег. У бота нет чата с таким @.";
+    } else if (s.status === "cannot_message"){
+      clearInterval(REG_STATUS_TIMER);
+      $regMsg.textContent = "Бот не может написать этому пользователю.";
+    } else if (s.status === "expired"){
+      clearInterval(REG_STATUS_TIMER);
+      $regMsg.textContent = "Код протух. Отправь заново.";
+    } else if (s.status === "locked"){
+      clearInterval(REG_STATUS_TIMER);
+      $regMsg.textContent = "Много неверных попыток. Блок на час.";
+    } else if (s.status === "verified"){
+      clearInterval(REG_STATUS_TIMER);
+      $regMsg.textContent = "Готово. Верификация пройдена.";
+    }
+  }catch{}
+}
 
-  openMainMenu();
+$btnVerify?.addEventListener("click", async () => {
+  if (!REG_ID){ $regMsg.textContent = "Сначала отправь код."; return; }
+  const code = ($regCode.value||"").trim();
+  if (!code || code.length !== 6){ $regMsg.textContent = "Введи 6 цифр."; return; }
+
+  try{
+    const resp = await api("/api/registration/verify", { reg_id: REG_ID, code });
+    if (resp.ok){
+      if (REG_STATUS_TIMER) clearInterval(REG_STATUS_TIMER);
+      state.auth.verified = true; saveAuth();
+      $regMsg.textContent = "Верификация пройдена. Можно играть.";
+      openMainMenu();
+    } else {
+      if (resp.reason === "bad_code"){
+        $regMsg.textContent = `Неверный код. Осталось попыток: ${resp.left}`;
+      } else if (resp.reason === "locked"){
+        $regMsg.textContent = "Блок на час за перебор неверных кодов.";
+      } else if (resp.reason === "expired"){
+        $regMsg.textContent = "Код истёк. Отправь заново.";
+      } else {
+        $regMsg.textContent = "Ошибка: " + (resp.reason || "неизвестная");
+      }
+    }
+  }catch(e){
+    console.error(e);
+    $regMsg.textContent = "Сеть не отвечает.";
+  }
 });
 
 // Ingame menu
@@ -381,20 +448,15 @@ $menuBtn?.addEventListener("click", () => {
   if ($ingameOverlay.classList.contains("hidden")) openIngameMenu();
   else closeIngameMenu();
 });
-
 $gmInventory?.addEventListener("click", () => { renderInventory(); $invDlg.showModal(); });
 $gmFlags?.addEventListener("click", () => { renderFlags(); $flagsDlg.showModal(); });
 $invClose?.addEventListener("click", () => $invDlg.close());
 $flagsClose?.addEventListener("click", () => $flagsDlg.close());
-
 $gmSaveExit?.addEventListener("click", () => {
   saveLocal();
   send("sync_state", {
-    scene: state.current,
-    inventory: state.inventory,
-    flags: state.flags,
-    last_bg: state.lastBg,
-    elapsed_sec: state.elapsedSec
+    scene: state.current, inventory: state.inventory,
+    flags: state.flags, last_bg: state.lastBg, elapsed_sec: state.elapsedSec
   });
   closeIngameMenu();
   openMainMenu();
@@ -405,20 +467,16 @@ $gmBack?.addEventListener("click", () => { closeIngameMenu(); });
 async function renderScene(key){
   const sc = state.scenes[key];
   if (!sc) return;
-
   state.current = key;
 
   if (sc.image){
     await blink(220);
     setBackground(sc.image, { fit: sc.fit, focus: sc.focus });
   }
-
   await typewrite($descText, sc.description||"…");
 
-  // options
   $opts.innerHTML = "";
   const options = normalizeOptions(sc);
-
   for (const opt of options){
     if (opt.requires && opt.requires.type === "item"){
       const need=opt.requires.name, count=opt.requires.count||1;
@@ -455,7 +513,6 @@ function startHeartbeat(){
 // Init
 (async function init(){
   try{
-    // билд-контроль
     const oldBuild = Number(localStorage.getItem(LS_BUILD)||"0");
     if (oldBuild !== APP_BUILD){
       localStorage.removeItem(LS_SAVE);
@@ -463,27 +520,23 @@ function startHeartbeat(){
     }
 
     state.scenes = await fetchScenes();
-
     const imgs = uniqueImages(state.scenes);
     fastPreload(imgs, progress);
 
-    // локальные данные
     loadAuth();
     loadLocal();
     if (!state.startedAt) state.startedAt = new Date().toISOString();
 
-    // ждём прелоад до 10с
     const t0 = Date.now();
     while (!preloadDone && Date.now()-t0 < 10000) await sleep(80);
 
     document.body.classList.remove("booting");
     document.body.classList.add("ready");
 
-    // гейт: регистрация → меню
     if (state.auth.verified) openMainMenu();
     else openRegistration();
 
-    pauseTimer(); // пока в меню/регистрации
+    pauseTimer();
     startHeartbeat();
     send("app_ready", {});
   }catch(err){
@@ -492,117 +545,4 @@ function startHeartbeat(){
     document.body.classList.add("ready");
     $descText.textContent = "Не удалось загрузить игру. Обнови страницу.";
   }
-
-// === API конфиг ===
-const API_BASE = "https://kristan-labored-earsplittingly.ngrok-free.dev"; // ← поставь свой ngrok адрес
-const API_KEY  = "super_secret_key_3481gfej83f";                      // ← тот же WEB_SECRET_KEY, что в bwa.py
-
-async function api(path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-KEY": API_KEY
-    },
-    body: JSON.stringify(body || {})
-  });
-  return res.json();
-}
-async function apiStatus(regId) {
-  const res = await fetch(`${API_BASE}/api/registration/status?reg_id=${encodeURIComponent(regId)}`, {
-    headers: { "X-API-KEY": API_KEY }
-  });
-  return res.json();
-}
-
-// === Регистрация ===
-let REG_ID = null;
-let REG_STATUS_TIMER = null;
-
-async function sendCodeByTag() {
-  const nick   = document.querySelector("#reg-nick").value.trim();
-  const tag    = document.querySelector("#reg-tag").value.trim();
-  const gender = document.querySelector("#reg-gender").value || "m";
-  const hint   = document.querySelector("#reg-hint");
-
-  if (!tag.startsWith("@")) {
-    hint.textContent = "Укажи тег с @, например @username.";
-    return;
-  }
-
-  hint.textContent = "Отправляю...";
-  const resp = await api("/api/registration/start", { tag, nickname: nick, gender });
-  if (!resp.ok) {
-    if (resp.reason === "already_verified") {
-      hint.textContent = "Ты уже верифицирован. Продолжай.";
-    } else if (resp.reason === "tag_must_start_with_at") {
-      hint.textContent = "Тег должен начинаться с @.";
-    } else {
-      hint.textContent = "Не получилось: " + (resp.reason || "ошибка");
-    }
-    return;
-  }
-
-  REG_ID = resp.reg_id;
-  hint.textContent = "Жду отправки кода...";
-  REG_STATUS_TIMER = setInterval(checkRegStatus, 1000);
-}
-
-async function checkRegStatus() {
-  if (!REG_ID) return;
-  const hint = document.querySelector("#reg-hint");
-  const s = await apiStatus(REG_ID);
-  if (!s.ok) return;
-
-  if (s.status === "code_sent") {
-    hint.textContent = "Код отправлен в Telegram владельцу тега. Введи его ниже.";
-  } else if (s.status === "bad_tag") {
-    clearInterval(REG_STATUS_TIMER);
-    hint.textContent = "Это не ваш тег. Бот не знает такого пользователя.";
-  } else if (s.status === "cannot_message") {
-    clearInterval(REG_STATUS_TIMER);
-    hint.textContent = "Бот не может написать этому пользователю.";
-  } else if (s.status === "expired") {
-    clearInterval(REG_STATUS_TIMER);
-    hint.textContent = "Код протух. Отправь заново.";
-  } else if (s.status === "locked") {
-    clearInterval(REG_STATUS_TIMER);
-    hint.textContent = "Много неверных попыток. Блок на час.";
-  } else if (s.status === "verified") {
-    clearInterval(REG_STATUS_TIMER);
-    hint.textContent = "Готово. Верификация пройдена.";
-  }
-}
-
-async function verifyCode() {
-  if (!REG_ID) return;
-  const code = document.querySelector("#reg-code").value.trim();
-  const hint = document.querySelector("#reg-hint");
-  if (!code || code.length !== 6) {
-    hint.textContent = "Введи 6 цифр.";
-    return;
-  }
-  const resp = await api("/api/registration/verify", { reg_id: REG_ID, code });
-  if (resp.ok) {
-    clearInterval(REG_STATUS_TIMER);
-    hint.textContent = "Верификация пройдена. Можно продолжать.";
-    // тут открой меню / разреши Начать игру
-  } else {
-    if (resp.reason === "bad_code") {
-      hint.textContent = `Неверный код. Осталось попыток: ${resp.left}`;
-    } else if (resp.reason === "locked") {
-      hint.textContent = "Блок на час за перебор неверных кодов.";
-    } else if (resp.reason === "expired") {
-      hint.textContent = "Код истёк. Отправь заново.";
-    } else {
-      hint.textContent = "Ошибка: " + resp.reason;
-    }
-  }
-}
-
-// привязываем обработчики к твоим кнопкам
-document.querySelector("#btn-send-code")?.addEventListener("click", sendCodeByTag);
-document.querySelector("#btn-verify")?.addEventListener("click", verifyCode);
-
-
 })();
