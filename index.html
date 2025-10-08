@@ -11,11 +11,14 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="booting">
+  <!-- ПРОЦЕДУРНОЕ РАЗБИТОЕ СТЕКЛО (CSS-only) -->
+  <div id="glass" aria-hidden="true"></div>
+
   <div id="app">
     <div class="stage" id="stage">
       <!-- Левая платформа: фон + текст -->
       <div class="pane">
-        <div class="card" id="desc">
+        <div class="card glass platform" id="desc">
           <img id="bgImg" alt="" />
           <div class="text"><span id="descText">Загрузка…</span></div>
 
@@ -29,7 +32,7 @@
 
       <!-- Правая колонка: варианты -->
       <div class="pane">
-        <div class="card">
+        <div class="card glass platform">
           <div class="stack" id="options"></div>
         </div>
       </div>
@@ -38,7 +41,7 @@
 
   <!-- Экран загрузки -->
   <div id="boot" class="boot" aria-live="polite">
-    <div class="boot-box">
+    <div class="boot-box glass">
       <div class="boot-title">Готовлю фон…</div>
       <div class="boot-progress"><div id="bootBar"></div></div>
       <div class="boot-meta">
@@ -53,16 +56,18 @@
 
   <!-- Диалоги -->
   <dialog id="invDlg">
-    <button class="close" id="invClose" aria-label="Закрыть">✕</button>
-    <div class="dlg-body">
+    <button class="close" id="invClose" aria-label="Закрыть"
+            onclick="document.getElementById('invDlg').close()">✕</button>
+    <div class="dlg-body glass">
       <h3>Инвентарь</h3>
       <div id="invList" class="list"></div>
     </div>
   </dialog>
 
   <dialog id="flagsDlg">
-    <button class="close" id="flagsClose" aria-label="Закрыть">✕</button>
-    <div class="dlg-body">
+    <button class="close" id="flagsClose" aria-label="Закрыть"
+            onclick="document.getElementById('flagsDlg').close()">✕</button>
+    <div class="dlg-body glass">
       <h3>Флаги</h3>
       <div id="flagsList" class="list"></div>
     </div>
@@ -70,36 +75,45 @@
 
   <!-- ГЛАВНОЕ ОВЕРЛЕЙ: меню/регистрация/лидерборд/настройки -->
   <div id="overlay" class="overlay hidden">
-
     <!-- Главное меню -->
-    <div id="menuPanel" class="panel hidden">
+    <div id="menuPanel" class="panel hidden glass heavy">
       <div class="brand">
+        <!-- логотип дугой с меньшим изгибом -->
         <svg class="brand-svg" viewBox="0 0 600 220" aria-hidden="true">
           <defs>
             <linearGradient id="grad" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0" stop-color="#bcd3ff"/>
+              <stop offset="0" stop-color="#cfe2ff"/>
               <stop offset="1" stop-color="#ffffff"/>
             </linearGradient>
+            <!-- лёгкий внутренний свет -->
+            <filter id="innerGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
           </defs>
-          <path id="arc" d="M60,150 C160,60 440,60 540,150" fill="none" stroke="none"/>
-          <text fill="url(#grad)" class="brand-text">
+          <!-- меньшая дуга -->
+          <path id="arc" d="M60,150 C200,95 400,95 540,150" fill="none" stroke="none"/>
+          <text fill="url(#grad)" class="brand-text" filter="url(#innerGlow)">
             <textPath href="#arc" startOffset="50%" text-anchor="middle">Raf Game</textPath>
           </text>
         </svg>
       </div>
 
       <div class="menu-col">
-        <button id="btnStart" class="cta">Начать</button>
-        <button id="btnContinue" class="cta ghost">Продолжить</button>
+        <button id="btnStart" class="cta glass-btn">Начать</button>
+        <button id="btnContinue" class="cta ghost glass-btn">Продолжить</button>
       </div>
       <div class="menu-bottom">
-        <button id="btnLeaderboard" class="round" title="Лидерборд">🏆</button>
-        <button id="btnSettings" class="round" title="Настройки">⚙️</button>
+        <button id="btnLeaderboard" class="round glass-btn" title="Лидерборд">🏆</button>
+        <button id="btnSettings" class="round glass-btn" title="Настройки">⚙️</button>
       </div>
     </div>
 
     <!-- Регистрация -->
-    <div id="regPanel" class="panel hidden">
+    <div id="regPanel" class="panel hidden glass">
       <h2>Регистрация</h2>
       <div class="form">
         <label>Никнейм
@@ -114,31 +128,31 @@
         <div class="gender-toggle" id="regGender">
           <span>Пол</span>
           <div class="pills">
-            <button type="button" class="pill active" data-val="m" id="btnMale">Мужской</button>
-            <button type="button" class="pill" data-val="f" id="btnFemale">Женский</button>
+            <button type="button" class="pill glass-btn" data-val="m" id="btnMale">Мужской</button>
+            <button type="button" class="pill glass-btn" data-val="f" id="btnFemale">Женский</button>
           </div>
         </div>
 
         <div class="dual">
-          <button id="btnSendCode" class="btn">Отправить код</button>
+          <button id="btnSendCode" class="btn glass-btn">Отправить код</button>
           <input id="regCode" type="text" inputmode="numeric" maxlength="6" placeholder="код из бота" />
-          <button id="btnVerify" class="btn quiet">Подтвердить</button>
+          <button id="btnVerify" class="btn quiet glass-btn">Подтвердить</button>
         </div>
         <div id="regMsg" class="muted"></div>
       </div>
     </div>
 
     <!-- Лидерборд -->
-    <div id="lbPanel" class="panel hidden">
+    <div id="lbPanel" class="panel hidden glass">
       <h2>Лидерборд</h2>
       <div class="lb-list" id="lbList"></div>
       <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-        <button class="btn quiet" id="lbBack">Назад</button>
+        <button class="btn quiet glass-btn" id="lbBack">Назад</button>
       </div>
     </div>
 
     <!-- Настройки -->
-    <div id="settingsPanel" class="panel hidden">
+    <div id="settingsPanel" class="panel hidden glass">
       <h2>Настройки</h2>
       <div class="form">
         <label class="row between">
@@ -152,26 +166,25 @@
         </label>
       </div>
       <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-        <button class="btn quiet" id="settingsBack">Назад</button>
+        <button class="btn quiet glass-btn" id="settingsBack">Назад</button>
       </div>
     </div>
-
   </div>
 
   <!-- ВНУТРИИГРОВОЕ МЕНЮ -->
   <div id="ingameOverlay" class="overlay hidden">
-    <div class="panel small gm-panel">
-      <button class="close close-gm" id="gmClose" aria-label="Закрыть">✕</button>
+    <div class="panel small glass heavy">
+      <button class="close close-gm" id="gmClose" aria-label="Закрыть"
+              onclick="document.getElementById('ingameOverlay').classList.add('hidden');document.body.classList.remove('looking-down')">✕</button>
       <div class="vstack">
-        <button id="gmInventory" class="btn">Инвентарь</button>
-        <button id="gmFlags" class="btn">Флаги</button>
-        <button id="gmSaveExit" class="btn warn">Сохранить и выйти в меню</button>
+        <button id="gmInventory" class="btn glass-btn">Инвентарь</button>
+        <button id="gmFlags" class="btn glass-btn">Флаги</button>
+        <button id="gmSaveExit" class="btn warn glass-btn">Сохранить и выйти в меню</button>
       </div>
     </div>
   </div>
 
-  <!-- Визуальные помехи -->
-  <div id="fx" class="fx hidden" aria-hidden="true"></div>
+  <!-- FX canvas будет создан app.js автоматически -->
 
   <script src="app.js"></script>
 </body>

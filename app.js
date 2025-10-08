@@ -1,6 +1,7 @@
 /* Raf game — WebApp (сцены из scenes.json) */
+/* build: noir+liquid-glass */
 
-const APP_BUILD = 10;
+const APP_BUILD = 11;
 
 // Telegram
 const tg = window.Telegram?.WebApp;
@@ -90,15 +91,19 @@ const $fxChance    = document.getElementById("fxChance");
 const $fxChanceVal = document.getElementById("fxChanceVal");
 const $settingsBack= document.getElementById("settingsBack");
 
-// ingame menu
+// ingame overlays / dialogs
 const $ingameOverlay = document.getElementById("ingameOverlay");
 const $gmInventory   = document.getElementById("gmInventory");
 const $gmFlags       = document.getElementById("gmFlags");
 const $gmSaveExit    = document.getElementById("gmSaveExit");
 const $gmClose       = document.getElementById("gmClose");
+const $invDlg        = document.getElementById("invDlg");
+const $flagsDlg      = document.getElementById("flagsDlg");
+const $invClose      = document.getElementById("invClose");
+const $flagsClose    = document.getElementById("flagsClose");
 
 // Config
-const IMG_BASE = "images/";
+const IMG_BASE   = "images/";
 const SCENES_URL = "scenes.json";
 
 const LS_SCENES   = "scenes_cache_v1";
@@ -108,7 +113,7 @@ const LS_BUILD    = "build115";
 const LS_SETTINGS = "settings115";
 
 const TYPEWRITE_MAX_MS = 3000;
-const HEARTBEAT_MS = 15000;
+const HEARTBEAT_MS     = 15000;
 
 // State
 const state = {
@@ -151,9 +156,9 @@ function pauseTimer(){ state.running = false; }
 // ===== Boot progress
 function progress(p, loaded, total){
   const pct = Math.round(p*100);
-  $bootBar.style.width = `${pct}%`;
-  $bootPct.textContent = `${pct}%`;
-  $bootCnt.textContent = `${loaded}/${total}`;
+  if ($bootBar) $bootBar.style.width = `${pct}%`;
+  if ($bootPct) $bootPct.textContent = `${pct}%`;
+  if ($bootCnt) $bootCnt.textContent = `${loaded}/${total}`;
 }
 
 // ===== Scenes
@@ -311,11 +316,15 @@ function loadSettings(){
   if ($fxEnable) $fxEnable.checked = !!state.settings.fxEnabled;
   if ($fxChance){
     $fxChance.value = String(state.settings.fxChance);
-    $fxChanceVal.textContent = `${state.settings.fxChance}%`;
+    if ($fxChanceVal) $fxChanceVal.textContent = `${state.settings.fxChance}%`;
   }
 }
 $fxEnable?.addEventListener("change", () => { state.settings.fxEnabled = $fxEnable.checked; saveSettings(); });
-$fxChance?.addEventListener("input", () => { state.settings.fxChance = Number($fxChance.value||"0"); $fxChanceVal.textContent = `${state.settings.fxChance}%`; saveSettings(); });
+$fxChance?.addEventListener("input", () => {
+  state.settings.fxChance = Number($fxChance.value||"0");
+  if ($fxChanceVal) $fxChanceVal.textContent = `${state.settings.fxChance}%`;
+  saveSettings();
+});
 
 // ===== Overlay helpers
 function showOverlay(panel){
@@ -392,8 +401,8 @@ $lbBack?.addEventListener("click", () => openMainMenu());
 function setGender(val){
   state.auth.gender = val;
   saveAuth();
-  $btnMale.classList.toggle("active", val==="m");
-  $btnFemale.classList.toggle("active", val==="f");
+  $btnMale?.classList.toggle("active", val==="m");
+  $btnFemale?.classList.toggle("active", val==="f");
 }
 $btnMale?.addEventListener("click", () => setGender("m"));
 $btnFemale?.addEventListener("click", () => setGender("f"));
@@ -499,18 +508,39 @@ $btnVerify?.addEventListener("click", async () => {
   }
 });
 
-// ===== Ingame menu
+// ===== Ingame menu / dialogs
 $menuBtn?.addEventListener("click", () => {
   if ($ingameOverlay.classList.contains("hidden")) {
-    pauseTimer(); document.body.classList.add("looking-down"); $ingameOverlay.classList.remove("hidden");
+    pauseTimer();
+    document.body.classList.add("looking-down");
+    $ingameOverlay.classList.remove("hidden");
   } else {
-    $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down"); startTimer();
+    $ingameOverlay.classList.add("hidden");
+    document.body.classList.remove("looking-down");
+    startTimer();
   }
 });
-$gmClose?.addEventListener("click", () => { $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down"); startTimer(); });
-$gmInventory?.addEventListener("click", () => { renderInventory(); document.getElementById("invDlg").showModal(); });
-$gmFlags?.addEventListener("click", () => { renderFlags(); document.getElementById("flagsDlg").showModal(); });
+$gmClose?.addEventListener("click", () => {
+  $ingameOverlay.classList.add("hidden");
+  document.body.classList.remove("looking-down");
+  startTimer();
+});
+$gmInventory?.addEventListener("click", () => { renderInventory(); $invDlg?.showModal(); });
+$gmFlags?.addEventListener("click", () => { renderFlags(); $flagsDlg?.showModal(); });
 
+// дублируем закрытие (помимо inline onclick в HTML)
+$invClose?.addEventListener("click", () => $invDlg?.close());
+$flagsClose?.addEventListener("click", () => $flagsDlg?.close());
+
+// ESC закрывает открытый dialog
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    if ($invDlg?.open) $invDlg.close();
+    if ($flagsDlg?.open) $flagsDlg.close();
+  }
+});
+
+// ===== Save & Exit
 $gmSaveExit?.addEventListener("click", async () => {
   saveLocal();
   // отправим прогресс в лидерборд как пример метрики
@@ -521,7 +551,8 @@ $gmSaveExit?.addEventListener("click", async () => {
     scene: state.current, inventory: state.inventory,
     flags: state.flags, last_bg: state.lastBg, elapsed_sec: state.elapsedSec
   });
-  $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down");
+  $ingameOverlay.classList.add("hidden");
+  document.body.classList.remove("looking-down");
   openMainMenu();
 });
 
@@ -550,11 +581,12 @@ function clearFx(){
   fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
 }
 function drawNoiseBlocky(alpha=0.18){
-  // рисуем низкорезовый шум и масштабируем
-  const w = Math.max(128, Math.floor(fxCanvas.width / 14));
-  const h = Math.max(72,  Math.floor(fxCanvas.height/ 14));
-  const off = new OffscreenCanvas ? new OffscreenCanvas(w, h) : document.createElement("canvas");
-  off.width = w; off.height = h;
+  // низкорезовый шум -> масштабируем в полный экран (пикселизация)
+  const w = Math.max(96, Math.floor(fxCanvas.width / 14));
+  const h = Math.max(64, Math.floor(fxCanvas.height/ 14));
+  const useOff = (typeof OffscreenCanvas !== "undefined");
+  const off = useOff ? new OffscreenCanvas(w, h) : document.createElement("canvas");
+  if (!useOff) { off.width = w; off.height = h; }
   const octx = off.getContext("2d", { willReadFrequently: true });
   const id = octx.createImageData(w, h);
   const buf = id.data;
@@ -571,7 +603,7 @@ function drawNoiseBlocky(alpha=0.18){
 }
 function drawScanlines(){
   const h = fxCanvas.height, w = fxCanvas.width;
-  fxCtx.globalAlpha = 0.18;
+  fxCtx.globalAlpha = 0.16;
   fxCtx.fillStyle = "#000";
   const step = Math.max(2, Math.round(2*fxDPR));
   for (let y=0; y<h; y+=step){
@@ -580,14 +612,13 @@ function drawScanlines(){
   fxCtx.globalAlpha = 1;
 }
 function drawTearGlitch(){
-  // пара горизонтальных полос, чуть смещённых по X
+  // пара полос, чуть смещённых по X
   const h = fxCanvas.height, w = fxCanvas.width;
   const bands = randInt(1,3);
   for (let i=0;i<bands;i++){
     const y = randInt(0, h-40);
     const bh = randInt(8*fxDPR, 22*fxDPR);
     const dx = randInt(-20*fxDPR, 20*fxDPR);
-    fxCtx.globalCompositeOperation = "source-over";
     const img = fxCtx.getImageData(0, y, w, bh);
     fxCtx.putImageData(img, dx, y);
   }
@@ -600,14 +631,11 @@ async function playFxCRT(durationMs){
   clearFx();
 
   const t0 = performance.now();
-  let lastT = t0;
 
   function frame(t){
-    const dt = t - lastT;
-    lastT = t;
     clearFx();
 
-    // 1) зернистый блоковый шум (эмитирует пикселизацию)
+    // 1) блоковый шум (ощущение пикселизации)
     drawNoiseBlocky(0.22);
 
     // 2) редкие «разрывы» (tearing)
@@ -624,14 +652,13 @@ async function playFxCRT(durationMs){
       fxActive = false;
     }
   }
-  // плавный fade-in canvas через CSS
   requestAnimationFrame(frame);
 }
 async function maybeFx(){
   if (!state.settings.fxEnabled) return;
   const chance = Number(state.settings.fxChance||0);
   if (Math.random()*100 <= chance){
-    const dur = randInt(400, 800);
+    const dur = randInt(420, 820);
     await playFxCRT(dur);
   }
 }
@@ -642,7 +669,8 @@ async function renderScene(key){
   if (!sc) return;
   state.current = key;
 
-  await maybeFx(); // эффекты перед сменой
+  // короткий эффект перед сменой
+  await maybeFx();
 
   if (sc.image){
     await blink(200);
@@ -692,7 +720,7 @@ function startHeartbeat(){
   try{
     const oldBuild = Number(localStorage.getItem(LS_BUILD)||"0");
     if (oldBuild !== APP_BUILD){
-      localStorage.removeItem(LS_SAVE);
+      localStorage.removeItem(LS_SAVE);     // важный сброс — чтобы "Начать" имело смысл
       localStorage.setItem(LS_BUILD, String(APP_BUILD));
     }
 

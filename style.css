@@ -1,30 +1,30 @@
 /* =====================================
-   RAF GAME — CINEMATIC NOIR UI
-   Полный стиль. Ничего больше не нужно.
+   RAF GAME — CINEMATIC NOIR + LIQUID GLASS
+   Полный стиль. Без картинок. Разбитое стекло — процедурно.
    ===================================== */
 
 /* ---------- COLOR SYSTEM ---------- */
 :root{
-  --bg:           #05070c;      /* глубоко-тёмный фон со синим тоном */
-  --bg-2:         #0a0f1a;      /* вторичный фон */
-  --surface:      #0b1120;      /* панели/карточки */
-  --surface-2:    #0e172a;      /* кнопки/HUD */
-  --surface-3:    #142043;      /* hover-слой */
-  --ink:          #e8eefc;      /* основной текст */
-  --muted:        #9fb0cc;      /* вторичный текст */
+  --bg:           #05070c;     /* глубокий тёмный */
+  --bg-2:         #0b0f1a;
 
-  /* неон холодный (cinematic) */
-  --accent:       #6fb8ff;      /* основной акцент */
-  --accent-2:     #b7e3ff;      /* светлая часть градиента */
+  --surface:      #0b1120;     /* базовые панели */
+  --surface-2:    #0e172a;     /* кнопки/HUD */
+  --surface-3:    #142043;     /* hover-слой */
 
-  /* акцент меню (янтарный для «Save» и подсветок) */
-  --amber:        #ffd463;
+  --ink:          #e8eefc;     /* основной текст */
+  --muted:        #9fb0cc;     /* вторичный текст */
+
+  --accent:       #6fb8ff;     /* холодный неон */
+  --accent-2:     #b7e3ff;
+
+  --amber:        #ffd463;     /* тёплый подсвет */
 
   --radius:       18px;
   --radius-sm:    12px;
   --shadow:       0 18px 50px rgba(0,0,0,.65);
-  --border:       1px solid rgba(255,255,255,.05);
-  --hair:         1px solid rgba(255,255,255,.06);
+  --border:       1px solid rgba(255,255,255,.06);
+  --hair:         1px solid rgba(255,255,255,.07);
 }
 
 /* ---------- BASE ---------- */
@@ -33,52 +33,77 @@ html, body{ height: 100%; }
 body{
   margin: 0;
   color: var(--ink);
-  background: var(--bg);
+  background: radial-gradient(1400px 800px at 50% -10%, rgba(35,68,120,.18), transparent 60%),
+              radial-gradient(900px 600px at 10% 110%, rgba(40,80,140,.12), transparent 70%),
+              radial-gradient(900px 600px at 90% 110%, rgba(20,40,90,.10), transparent 70%),
+              var(--bg);
   font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  /* общий фон: лёгкая дымка + виньетка (cinematic) */
-  background-image:
-    radial-gradient(1400px 800px at 50% -10%, rgba(35,68,120,.22), transparent 60%),
-    radial-gradient(900px 600px at 10% 110%, rgba(40,80,140,.16), transparent 70%),
-    radial-gradient(900px 600px at 90% 110%, rgba(20,40,90,.12), transparent 70%);
 }
 .hidden{ display: none !important; }
 
+/* во время прелоада прячем сцену */
+body.booting .stage{ opacity: 0; pointer-events: none; }
+
+/* мягкая виньетка */
 body::after{
-  /* мягкая виньетка поверх всего */
   content:"";
   position: fixed; inset: 0;
   pointer-events: none;
   background:
     radial-gradient(1200px 700px at 50% 10%, rgba(0,0,0,.0), rgba(0,0,0,.18) 65%, rgba(0,0,0,.34) 100%);
-  z-index: 10;
+  z-index: 5;
 }
 
-/* пленочное зерно для меню/оверлеев */
-@keyframes grainShift {
-  0% { transform: translate(0,0) }
-  100% { transform: translate(-10%, -10%) }
+/* ---------- CRACKED GLASS (CSS-only) ---------- */
+#glass{
+  position: fixed; inset: 0; z-index: 2; pointer-events: none;
+  /* свет + затемнение для объёма */
+  background:
+    radial-gradient(1200px 700px at 50% -10%, rgba(255,255,255,.04), transparent 60%),
+    radial-gradient(800px 600px at 70% 120%, rgba(255,255,255,.03), transparent 70%),
+    radial-gradient(800px 600px at 30% 120%, rgba(255,255,255,.025), transparent 70%);
+  /* маска трещин: векторное SVG без изображений */
+  -webkit-mask-image: url("data:image/svg+xml;utf8,\
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900'>\
+    <g fill='none' stroke='white' stroke-width='1.2' stroke-opacity='0.9' stroke-linecap='round'>\
+      <path d='M150 160 L320 240 L470 190 L560 260 L710 230'/>\
+      <path d='M1400 120 L1220 200 L1100 260 L980 230 L870 300'/>\
+      <path d='M800 70 L780 170 L760 260 L720 340 L680 410'/>\
+      <path d='M400 500 L520 520 L640 560 L760 600 L880 640'/>\
+      <path d='M200 740 L360 690 L540 710 L700 760 L860 740 L1020 700'/>\
+      <path d='M1200 520 L1300 600 L1420 650'/>\
+      <path d='M1040 380 L1120 420 L1200 460'/>\
+      <path d='M300 300 L340 380 L380 460'/>\
+      <path d='M980 820 L900 760 L820 720'/>\
+      <!-- мелкие трещины -->\
+      <path d='M560 260 L590 220 M560 260 L595 300'/>\
+      <path d='M1220 200 L1185 150 M1220 200 L1255 245'/>\
+      <path d='M520 520 L540 470 M520 520 L540 565'/>\
+      <path d='M860 740 L900 700 M860 740 L815 780'/>\
+    </g></svg>");
+  mask-image: url("data:image/svg+xml;utf8,\
+  <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 900'>\
+    <g fill='none' stroke='white' stroke-width='1.2' stroke-opacity='0.9' stroke-linecap='round'>\
+      <path d='M150 160 L320 240 L470 190 L560 260 L710 230'/>\
+      <path d='M1400 120 L1220 200 L1100 260 L980 230 L870 300'/>\
+      <path d='M800 70 L780 170 L760 260 L720 340 L680 410'/>\
+      <path d='M400 500 L520 520 L640 560 L760 600 L880 640'/>\
+      <path d='M200 740 L360 690 L540 710 L700 760 L860 740 L1020 700'/>\
+      <path d='M1200 520 L1300 600 L1420 650'/>\
+      <path d='M1040 380 L1120 420 L1200 460'/>\
+      <path d='M300 300 L340 380 L380 460'/>\
+      <path d='M980 820 L900 760 L820 720'/>\
+      <path d='M560 260 L590 220 M560 260 L595 300'/>\
+      <path d='M1220 200 L1185 150 M1220 200 L1255 245'/>\
+      <path d='M520 520 L540 470 M520 520 L540 565'/>\
+      <path d='M860 740 L900 700 M860 740 L815 780'/>\
+    </g></svg>");
+  opacity: .22; /* заметно, но не навязчиво */
+  mix-blend-mode: overlay;
 }
-
-#overlay::before,
-#ingameOverlay::before{
-  content:"";
-  position: absolute; inset: 0;
-  z-index: 0; pointer-events: none;
-  opacity: .12;
-  background-image: url("data:image/svg+xml;utf8,\
-  <svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'>\
-    <filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/></filter>\
-    <rect width='96' height='96' filter='url(%23f)' opacity='0.55'/>\
-  </svg>");
-  background-size: 240px 240px;
-  animation: grainShift 6s linear infinite alternate;
-}
-
-/* во время прелоада прячем сцену */
-body.booting .stage{ opacity: 0; pointer-events: none; }
 
 /* ---------- LAYOUT ---------- */
-#app{ max-width: 1200px; margin: 24px auto; padding: 0 16px; position: relative; z-index: 1; }
+#app{ max-width: 1200px; margin: 24px auto; padding: 0 16px; position: relative; z-index: 3; }
 
 .stage{
   display: grid;
@@ -93,16 +118,15 @@ body.looking-down #stage{
   filter: blur(5px) brightness(.82);
 }
 
-/* ---------- CARDS ---------- */
+/* ---------- CARDS / PLATFORMS ---------- */
 .pane .card{
   position: relative;
   background: var(--surface);
   border-radius: var(--radius);
-  border: var(--border);
+  border: var(--hair);
   box-shadow: var(--shadow);
   overflow: hidden;
 }
-
 #desc{ min-height: 520px; display: flex; flex-direction: column; }
 
 /* ФОН СЦЕНЫ */
@@ -123,6 +147,69 @@ body.looking-down #stage{
   text-shadow: 0 1px 0 rgba(0,0,0,.45);
 }
 
+/* ---------- LIQUID GLASS (панели + кнопки) ---------- */
+/* Базовая «жидкая» панель */
+.glass{
+  background:
+    radial-gradient(120% 180% at 20% 0%, rgba(255,255,255,.06), rgba(255,255,255,.02) 45%, rgba(0,0,0,.0) 60%) ,
+    linear-gradient(180deg, rgba(30,40,70,.55), rgba(10,14,26,.55));
+  backdrop-filter: blur(12px) saturate(115%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  border: var(--hair);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.035),
+    0 22px 60px rgba(0,0,0,.65);
+}
+.glass.heavy{
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.045),
+    0 26px 70px rgba(0,0,0,.7);
+}
+
+/* Плавные «волны» света по стеклу (очень слабо, чтобы не раздражало) */
+.glass::before{
+  content:"";
+  position: absolute; inset: -20%;
+  background:
+    conic-gradient(from 0deg at 30% 20%, rgba(255,255,255,.06), rgba(255,255,255,0) 25%),
+    conic-gradient(from 180deg at 70% 80%, rgba(255,255,255,.05), rgba(255,255,255,0) 35%);
+  mix-blend-mode: soft-light;
+  animation: glassFlow 16s linear infinite;
+  opacity: .35;
+  pointer-events: none;
+}
+@keyframes glassFlow{
+  0%{ transform: translate3d(-2%, -2%, 0) rotate(0deg) }
+  50%{ transform: translate3d(2%, 2%, 0) rotate(180deg) }
+  100%{ transform: translate3d(-2%, -2%, 0) rotate(360deg) }
+}
+
+/* Кнопки: тёмное жидкое стекло */
+.glass-btn{
+  background:
+    radial-gradient(160% 200% at 20% -10%, rgba(255,255,255,.10), rgba(255,255,255,.02) 40%, rgba(0,0,0,0) 60%) ,
+    linear-gradient(180deg, rgba(18,26,44,.85), rgba(10,16,30,.85));
+  border: var(--hair);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    0 10px 28px rgba(0,0,0,.55);
+  transition: .18s transform, .18s background, .18s box-shadow, .18s border-color, .18s opacity;
+}
+.glass-btn:hover{
+  transform: translateY(-1px);
+  background:
+    radial-gradient(160% 200% at 20% -10%, rgba(255,255,255,.14), rgba(255,255,255,.03) 40%, rgba(0,0,0,0) 60%) ,
+    linear-gradient(180deg, rgba(24,34,60,.92), rgba(12,18,34,.92));
+  border-color: rgba(160,210,255,.18);
+  box-shadow:
+    inset 0 0 0 1px rgba(160,210,255,.08),
+    0 16px 36px rgba(35,110,220,.18);
+}
+
 /* ---------- OPTIONS (правая колонка) ---------- */
 .stack{ display: flex; flex-direction: column; gap: 12px; padding: 16px; }
 
@@ -130,19 +217,28 @@ body.looking-down #stage{
   display: block;
   padding: 18px 20px;
   border-radius: var(--radius);
-  background: linear-gradient(180deg, var(--surface-2), #0a1430);
-  border: var(--hair);
-  box-shadow: 0 4px 16px rgba(0,0,0,.45);
   color: #fff;
   text-align: left;
   cursor: pointer;
-  transition: .18s transform ease, .18s background ease, .18s border-color ease, .18s box-shadow ease;
+  transition: .18s transform ease, .18s background ease, .18s border-color ease, .18s box-shadow ease, .18s opacity ease;
+  /* наследуем liquid-glass */
+  background:
+    radial-gradient(140% 180% at 18% -10%, rgba(255,255,255,.10), rgba(255,255,255,.02) 40%, rgba(0,0,0,0) 60%) ,
+    linear-gradient(180deg, rgba(18,26,44,.85), rgba(10,16,30,.85));
+  border: var(--hair);
+  backdrop-filter: blur(8px) saturate(118%);
+  -webkit-backdrop-filter: blur(8px) saturate(118%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    0 6px 20px rgba(0,0,0,.5);
 }
 .option:hover{
   transform: translateY(-2px);
-  background: linear-gradient(180deg, var(--surface-3), #0e1c44);
-  border-color: rgba(160,200,255,.22);
-  box-shadow: 0 8px 26px rgba(30,90,170,.20);
+  background:
+    radial-gradient(140% 180% at 18% -10%, rgba(255,255,255,.14), rgba(255,255,255,.03) 40%, rgba(0,0,0,0) 60%) ,
+    linear-gradient(180deg, rgba(24,34,60,.92), rgba(12,18,34,.92));
+  border-color: rgba(160,200,255,.2);
+  box-shadow: 0 10px 28px rgba(35,110,220,.16);
 }
 
 /* ---------- HUD (нижняя панель) ---------- */
@@ -155,7 +251,6 @@ body.looking-down #stage{
   border-radius: 14px;
   backdrop-filter: blur(6px) saturate(1.05);
 }
-
 .timer{
   margin-right: auto;
   padding: 6px 10px;
@@ -165,7 +260,6 @@ body.looking-down #stage{
   font-size: 13px;
   color: #d0d8ea;
 }
-
 .hud-menu{
   width: 36px; height: 36px;
   border-radius: 50%;
@@ -193,15 +287,12 @@ body.looking-down #stage{
   position: fixed; inset: 0;
   background: var(--bg);
   display: grid; place-items: center;
-  z-index: 10000;
+  z-index: 4;
 }
 .boot-box{
   width: min(520px, 92vw);
-  background: var(--surface);
-  border: var(--hair);
   border-radius: 16px;
   padding: 22px;
-  box-shadow: var(--shadow);
 }
 .boot-title{ font-weight: 700; margin-bottom: 12px; }
 .boot-progress{
@@ -222,38 +313,23 @@ body.ready .boot{ display: none; }
   position: fixed; inset: 0;
   display: grid; place-items: center;
   background: radial-gradient(1000px 600px at 50% 0%, rgba(15,28,54,.92), rgba(8,12,22,.96) 60%, rgba(5,8,15,.98));
-  z-index: 10001;
+  z-index: 6;
 }
 
-/* small panels by default */
-.panel{
-  position: relative;
-  width: min(600px, 92vw);
-  background: linear-gradient(180deg, #0a1224, #0a0f1c);
-  border: var(--hair);
-  border-radius: 16px;
-  padding: 22px 22px 28px;
-  box-shadow:
-    0 22px 60px rgba(0,0,0,.65),
-    inset 0 0 0 1px rgba(255,255,255,.04);
-}
-
-/* большие панели — fullscreen центр */
+/* панели фуллскрин */
 #menuPanel, #regPanel, #lbPanel, #settingsPanel{
   width: min(680px, 96vw);
   height: 100vh;
   border-radius: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;   /* по вертикали центр */
-  align-items: center;       /* по горизонтали центр */
+  justify-content: center;
+  align-items: center;
   gap: 16px;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  position: relative;
 }
 
-/* ---------- BRAND — Raf Game дугой + неоновый бликующий эффект ---------- */
+/* ---------- BRAND — дуга меньше, неоновая глубина ---------- */
 .brand{ margin: 0 0 8px 0; text-align: center; position: relative; }
 .brand-svg{
   width: min(560px, 90vw); height: auto;
@@ -268,37 +344,16 @@ body.ready .boot{ display: none; }
   stroke: rgba(0,0,0,.40);
   stroke-width: 6px; /* псевдо-3D обводка */
 }
-
-/* пульсирующий мягкий неон (не агрессивно) */
-@keyframes neonPulse {
-  0%   { filter: drop-shadow(0 0 0 rgba(120,180,255,.0)); }
-  50%  { filter: drop-shadow(0 0 22px rgba(120,180,255,.25)); }
-  100% { filter: drop-shadow(0 0 0 rgba(120,180,255,.0)); }
-}
+@keyframes neonPulse { 0%{opacity:.98} 50%{opacity:1} 100%{opacity:.98} }
 .brand-svg{ animation: neonPulse 3.2s ease-in-out infinite; }
 
-/* кнопки ГЛАВНОГО МЕНЮ — сохраняем расположение, добавляем стиль */
+/* Кнопки главного меню */
 .menu-col{ display: grid; gap: 16px; width: min(520px, 92vw); }
 .cta{
-  width: 100%;
-  appearance: none; border: var(--hair);
-  padding: 20px 24px; border-radius: 999px;
-  background: linear-gradient(180deg, var(--surface-2), #0b1630);
-  color: var(--ink);
-  font-size: 22px; font-weight: 800;
-  cursor: pointer; text-align: center;
-  transition: .18s transform, .18s background, .18s box-shadow, .18s border-color;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.04),
-    0 10px 28px rgba(0,0,0,.55);
-}
-.cta:hover{
-  transform: translateY(-1px);
-  background: linear-gradient(180deg, var(--surface-3), #10204a);
-  border-color: rgba(150,200,255,.28);
-  box-shadow:
-    inset 0 0 0 1px rgba(160,210,255,.10),
-    0 16px 36px rgba(35,110,220,.20);
+  width: 100%; appearance: none; border-radius: 999px;
+  padding: 20px 24px; color: var(--ink);
+  font-size: 22px; font-weight: 800; text-align: center; cursor: pointer;
+  border: none; /* границу даёт .glass-btn */
 }
 .cta.ghost{ font-weight: 600; opacity: .95; }
 
@@ -310,22 +365,8 @@ body.ready .boot{ display: none; }
 }
 .round{
   width: 56px; height: 56px; border-radius: 50%;
-  border: var(--hair);
-  background: radial-gradient(110% 110% at 28% 20%, #182646, #0e172a);
-  color: var(--ink);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.05),
-    0 10px 28px rgba(0,0,0,.55);
   cursor: pointer;
-  transition: .18s transform, .18s background, .18s box-shadow, .18s border-color;
-}
-.round:hover{
-  transform: translateY(-1px);
-  background: radial-gradient(110% 110% at 28% 20%, #20335e, #0f1d3a);
-  border-color: rgba(150,200,255,.24);
-  box-shadow:
-    inset 0 0 0 1px rgba(160,210,255,.08),
-    0 16px 34px rgba(35,110,220,.20);
+  border: none;
 }
 
 /* ---------- REGISTRATION FORM ---------- */
@@ -349,48 +390,30 @@ input:focus, select:focus{
 
 .dual{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .btn{
-  appearance: none; border: var(--hair);
-  background: linear-gradient(180deg, var(--surface-2), #0b1630);
-  color: var(--ink);
-  border-radius: 12px; padding: 12px 14px;
-  cursor: pointer; transition: .18s transform, .18s background, .18s border-color, .18s box-shadow;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
-}
-.btn:hover{
-  transform: translateY(-1px);
-  background: linear-gradient(180deg, var(--surface-3), #10204a);
-  border-color: rgba(150,200,255,.28);
+  appearance: none; border-radius: 12px; padding: 12px 14px;
+  cursor: pointer;
+  border: none;
 }
 .btn.quiet{ opacity: .9; }
 .btn.warn{
-  background: #231f14;
-  border-color: rgba(255, 210, 90, .42);
-  box-shadow: inset 0 0 0 1px rgba(255,210,90,.12), 0 0 24px rgba(255,220,120,.12);
+  background: #231f14 !important;
+  border: var(--hair);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,210,90,.14),
+    0 0 24px rgba(255,220,120,.10);
 }
-.btn.warn:hover{ background: #2a2418; }
-
 .muted{ color: var(--muted); font-size: 13px; }
 
 /* Gender — две «пилюли» */
 .gender-toggle{ display: grid; gap: 8px; }
 .gender-toggle .pills{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pill{
-  appearance: none; border: var(--hair);
-  background: linear-gradient(180deg, #0c152c, #0a1122);
-  color: var(--ink);
-  border-radius: 999px; padding: 12px 14px;
-  cursor: pointer;
-  transition: .18s transform, .18s background, .18s border-color, .18s color, .18s box-shadow;
-  text-align: center; font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+  font-weight: 700; text-align: center;
 }
-.pill:hover{ transform: translateY(-1px); background: linear-gradient(180deg, #132549, #0d1a32); }
 .pill.active{
-  background: linear-gradient(180deg, #1b2c58, #142547);
-  border-color: rgba(120,180,255,.35);
   box-shadow:
-    inset 0 0 0 1px rgba(120,180,255,.16),
-    0 0 24px rgba(120,180,255,.12);
+    inset 0 0 0 1px rgba(120,180,255,.18),
+    0 0 24px rgba(120,180,255,.10);
 }
 
 /* ---------- LEADERBOARD ---------- */
@@ -398,8 +421,13 @@ input:focus, select:focus{
 .lb-list .row{
   display: grid; grid-template-columns: 44px 1fr 1fr 90px;
   gap: 8px; align-items: center; padding: 10px 12px;
-  background: linear-gradient(180deg, var(--surface-2), #0b1630);
-  border: var(--hair); border-radius: 12px;
+  border-radius: 12px;
+  border: var(--hair);
+  background:
+    radial-gradient(140% 180% at 18% -10%, rgba(255,255,255,.10), rgba(255,255,255,.02) 40%, rgba(0,0,0,0) 60%) ,
+    linear-gradient(180deg, rgba(18,26,44,.85), rgba(10,16,30,.85));
+  backdrop-filter: blur(8px) saturate(118%);
+  -webkit-backdrop-filter: blur(8px) saturate(118%);
 }
 .lb-list .pos{ text-align: center; font-weight: 700; color: #b9c6ff; }
 .lb-list .tag{ opacity: .95; }
@@ -408,14 +436,17 @@ input:focus, select:focus{
 /* ---------- DIALOGS ---------- */
 dialog{
   border: 0; border-radius: 14px;
-  background: linear-gradient(180deg, #0b1226, #0b101c);
+  background: transparent;
   color: var(--ink); padding: 0;
-  box-shadow: 0 24px 60px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,255,255,.05);
+  box-shadow: none;
 }
 dialog::backdrop{ background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
-dialog .dlg-body{ padding: 20px 22px 12px; min-width: 300px; max-width: 92vw; max-height: 72vh; overflow: auto; }
+dialog .dlg-body{
+  padding: 20px 22px 12px; min-width: 300px; max-width: 92vw; max-height: 72vh; overflow: auto;
+  border-radius: 14px; position: relative;
+}
 dialog .close{
-  position: absolute; right: 6px; top: 6px; border: 0;
+  position: absolute; right: 6px; top: 6px; border: 0; z-index: 2;
   background: transparent; color: var(--muted);
   font-size: 18px; cursor: pointer;
 }
@@ -425,17 +456,15 @@ dialog .close{
 .eyelid{ position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 9999; transition: height .18s ease; pointer-events: none; }
 .eyelid.top{ top: 0; } .eyelid.bot{ bottom: 0; }
 
-/* ---------- IN-GAME OVERLAY (меню колонкой + крестик) ---------- */
+/* ---------- IN-GAME OVERLAY ---------- */
 .vstack{ display: grid; gap: 10px; }
-.gm-panel{ position: relative; }
 .close-gm{
   position: absolute; right: 8px; top: 8px;
   border: 0; background: transparent; color: var(--muted);
   font-size: 18px; cursor: pointer;
 }
 
-/* ---------- SETTINGS: Switch + Range (реально работают, app.js уже готов) ---------- */
-/* Переключатель (appearance: none) */
+/* ---------- SETTINGS: Switch + Range ---------- */
 #settingsPanel input[type="checkbox"]{
   appearance: none; -webkit-appearance: none; -moz-appearance: none;
   width: 50px; height: 28px; border-radius: 999px;
@@ -465,7 +494,6 @@ dialog .close{
   box-shadow: 0 0 14px rgba(120,180,255,.35);
 }
 
-/* Слайдер процента шанса (0–100) */
 #settingsPanel input[type="range"]{
   -webkit-appearance: none; appearance: none; width: 100%;
   height: 10px; border-radius: 999px;
@@ -474,9 +502,7 @@ dialog .close{
   outline: none; cursor: pointer;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 16px rgba(0,0,0,.35);
 }
-#settingsPanel input[type="range"]::-webkit-slider-runnable-track{
-  height: 10px; border-radius: 999px; background: transparent;
-}
+#settingsPanel input[type="range"]::-webkit-slider-runnable-track{ height: 10px; border-radius: 999px; background: transparent; }
 #settingsPanel input[type="range"]::-webkit-slider-thumb{
   -webkit-appearance: none; appearance: none;
   width: 22px; height: 22px; margin-top: -6px;
@@ -488,13 +514,8 @@ dialog .close{
     0 10px 24px rgba(120,180,255,.2);
   transition: transform .12s ease;
 }
-#settingsPanel input[type="range"]::-webkit-slider-thumb:active{
-  transform: scale(1.06);
-}
-
-#settingsPanel input[type="range"]::-moz-range-track{
-  height: 10px; border-radius: 999px; background: transparent;
-}
+#settingsPanel input[type="range"]::-webkit-slider-thumb:active{ transform: scale(1.06); }
+#settingsPanel input[type="range"]::-moz-range-track{ height: 10px; border-radius: 999px; background: transparent; }
 #settingsPanel input[type="range"]::-moz-range-thumb{
   width: 22px; height: 22px; border: 1px solid rgba(140,190,255,.6);
   border-radius: 50%;
@@ -503,26 +524,18 @@ dialog .close{
     0 0 0 4px rgba(120,180,255,.12),
     0 10px 24px rgba(120,180,255,.2);
 }
-
 #fxChanceVal{ margin-top: 6px; color: var(--muted); font-size: 13px; }
 
-/* гибкая строка для подписи-включалки */
-.row{ display: flex; align-items: center; gap: 12px; }
-.between{ justify-content: space-between; }
-
-/* ---------- FX CANVAS (для CRT/Pixel эффекта) ---------- */
+/* ---------- FX CANVAS (для CRT/Pixel эффекта; создаётся из app.js) ---------- */
 .fx-canvas{
   position: fixed; inset: 0; z-index: 10002;
   pointer-events: none;
   opacity: 0;
   transition: opacity .18s ease;
-  /* чутка «экрана» */
   mix-blend-mode: screen;
   filter: contrast(1.03) saturate(1.02) brightness(1.02);
 }
-.fx-canvas.visible{
-  opacity: .95; /* заметно, но не агрессивно */
-}
+.fx-canvas.visible{ opacity: .95; }
 
 /* ---------- RESPONSIVE ---------- */
 @media (max-width: 980px){
