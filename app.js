@@ -1,7 +1,7 @@
-/* Raf game — WebApp (сцены из scenes.json) */
-/* build: noir+liquid-glass */
-
-const APP_BUILD = 11;
+/* Raf game — WebApp (сцены из scenes.json)
+   build: noir + liquid glass + bulbs sign
+*/
+const APP_BUILD = 13;
 
 // Telegram
 const tg = window.Telegram?.WebApp;
@@ -102,6 +102,9 @@ const $flagsDlg      = document.getElementById("flagsDlg");
 const $invClose      = document.getElementById("invClose");
 const $flagsClose    = document.getElementById("flagsClose");
 
+// lamp sign container
+const $lampSign = document.getElementById("lampSign");
+
 // Config
 const IMG_BASE   = "images/";
 const SCENES_URL = "scenes.json";
@@ -128,7 +131,8 @@ const state = {
   tick: null,
   typing: false,
   auth: { verified:false, nickname:"", tag:"", gender:"m" },
-  settings: { fxEnabled: true, fxChance: 50 }
+  settings: { fxEnabled: true, fxChance: 50 },
+  bulbs: [] // для ламповой вывески
 };
 
 const imageCache = {};
@@ -140,6 +144,7 @@ const send  = (event, payload) => { if (tg?.sendData) tg.sendData(JSON.stringify
 const fmtTime = (sec) => `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(Math.floor(sec%60)).padStart(2,"0")}`;
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+function randFloat(a,b){ return a + Math.random()*(b-a); }
 
 // ===== Timer
 function startTimer(){
@@ -319,7 +324,9 @@ function loadSettings(){
     if ($fxChanceVal) $fxChanceVal.textContent = `${state.settings.fxChance}%`;
   }
 }
-$fxEnable?.addEventListener("change", () => { state.settings.fxEnabled = $fxEnable.checked; saveSettings(); });
+$fxEnable?.addEventListener("change", () => {
+  state.settings.fxEnabled = $fxEnable.checked; saveSettings();
+});
 $fxChance?.addEventListener("input", () => {
   state.settings.fxChance = Number($fxChance.value||"0");
   if ($fxChanceVal) $fxChanceVal.textContent = `${state.settings.fxChance}%`;
@@ -528,7 +535,7 @@ $gmClose?.addEventListener("click", () => {
 $gmInventory?.addEventListener("click", () => { renderInventory(); $invDlg?.showModal(); });
 $gmFlags?.addEventListener("click", () => { renderFlags(); $flagsDlg?.showModal(); });
 
-// дублируем закрытие (помимо inline onclick в HTML)
+// дублируем закрытие (помимо HTML)
 $invClose?.addEventListener("click", () => $invDlg?.close());
 $flagsClose?.addEventListener("click", () => $flagsDlg?.close());
 
@@ -543,7 +550,6 @@ window.addEventListener("keydown", (e) => {
 // ===== Save & Exit
 $gmSaveExit?.addEventListener("click", async () => {
   saveLocal();
-  // отправим прогресс в лидерборд как пример метрики
   if (state.auth.tag && state.auth.nickname){
     try { await apiSubmitLB(state.auth.tag, state.auth.nickname, state.elapsedSec); } catch(e){}
   }
@@ -556,7 +562,7 @@ $gmSaveExit?.addEventListener("click", async () => {
   openMainMenu();
 });
 
-// ===== FX (CRT + Pixel) via Canvas (auto-created)
+// ===== FX (CRT + Pixel) via Canvas
 let fxCanvas = null, fxCtx = null, fxDPR = 1, fxActive = false;
 function ensureFxCanvas(){
   if (fxCanvas) return;
@@ -580,8 +586,7 @@ function clearFx(){
   if (!fxCtx) return;
   fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
 }
-function drawNoiseBlocky(alpha=0.18){
-  // низкорезовый шум -> масштабируем в полный экран (пикселизация)
+function drawNoiseBlocky(alpha=0.22){
   const w = Math.max(96, Math.floor(fxCanvas.width / 14));
   const h = Math.max(64, Math.floor(fxCanvas.height/ 14));
   const useOff = (typeof OffscreenCanvas !== "undefined");
@@ -606,13 +611,10 @@ function drawScanlines(){
   fxCtx.globalAlpha = 0.16;
   fxCtx.fillStyle = "#000";
   const step = Math.max(2, Math.round(2*fxDPR));
-  for (let y=0; y<h; y+=step){
-    fxCtx.fillRect(0, y, w, 1);
-  }
+  for (let y=0; y<h; y+=step){ fxCtx.fillRect(0, y, w, 1); }
   fxCtx.globalAlpha = 1;
 }
 function drawTearGlitch(){
-  // пара полос, чуть смещённых по X
   const h = fxCanvas.height, w = fxCanvas.width;
   const bands = randInt(1,3);
   for (let i=0;i<bands;i++){
@@ -631,17 +633,10 @@ async function playFxCRT(durationMs){
   clearFx();
 
   const t0 = performance.now();
-
   function frame(t){
     clearFx();
-
-    // 1) блоковый шум (ощущение пикселизации)
     drawNoiseBlocky(0.22);
-
-    // 2) редкие «разрывы» (tearing)
     if (Math.random() < 0.35) drawTearGlitch();
-
-    // 3) скан-линии CRT
     drawScanlines();
 
     if (t - t0 < durationMs){
@@ -690,7 +685,7 @@ async function renderScene(key){
     b.className = "option";
     b.textContent = opt.label;
     b.onclick = async () => {
-      if (state.typing) return; // блокируем клики во время набора
+      if (state.typing) return;
       saveLocal();
       send("choice_made", { from:key, to:opt.next, label:opt.label });
       await sleep(100);
@@ -715,12 +710,238 @@ function startHeartbeat(){
   }, HEARTBEAT_MS);
 }
 
+/* ================================
+   LAMP SIGN (Raf Game) — отдельные лампы
+   Каждая лампа:
+    - классы: .bulb, .on | .off | .dead
+    - каждую секунду 5% шанс погаснуть на 1–5 сек (если не dead)
+    - ~8% стартуют "dead" (не загораются вовсе)
+   Рендер: примитивные "каркасы" букв с набросом точек
+   и лёгкой дугой по слову (минимальное искривление).
+================================ */
+function injectLampStyles(){
+  const css = `
+  .lamp-sign.has-bulbs::after{ display:none; }
+  .lamp-sign{ position:relative; }
+  .lamp-sign .bulb{
+    position:absolute; width:10px; height:10px;
+    transform: translate(-50%,-50%);
+    border-radius:50%;
+    /* стекло */
+    background: radial-gradient(circle at 45% 40%, #ffdba0 0%, #7a4a1a 65%, #321c0b 100%);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.06) inset,
+      0 2px 6px rgba(0,0,0,.6);
+    filter: saturate(1.1);
+  }
+  .lamp-sign .bulb .b-core{
+    position:absolute; inset:0;
+    border-radius:50%;
+    background: radial-gradient(circle at 50% 50%, rgba(255,210,120,.95) 0%, rgba(255,180,70,.65) 30%, rgba(255,160,40,.0) 65%);
+    opacity:.0; transition: opacity .14s ease;
+    mix-blend-mode: screen;
+  }
+  .lamp-sign .bulb .b-glow{
+    position:absolute; left:50%; top:50%; width:0; height:0;
+    pointer-events:none;
+    box-shadow:
+      0 0 18px 6px rgba(255,200,90,.85),
+      0 0 34px 12px rgba(255,200,90,.35);
+    opacity:0; transition: opacity .14s ease;
+  }
+  .lamp-sign .bulb .b-glass{
+    position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    background:
+      radial-gradient(60% 60% at 30% 30%, rgba(255,255,255,.45), rgba(255,255,255,0) 60%),
+      radial-gradient(80% 80% at 70% 70%, rgba(255,255,255,.12), rgba(255,255,255,0) 70%);
+    mix-blend-mode: screen; opacity:.55;
+  }
+  .lamp-sign .bulb.on .b-core{ opacity:1; }
+  .lamp-sign .bulb.on .b-glow{ opacity:1; }
+  .lamp-sign .bulb.off{
+    filter: grayscale(.6) brightness(.65);
+  }
+  .lamp-sign .bulb.dead{
+    filter: grayscale(1) brightness(.35);
+    box-shadow: 0 1px 4px rgba(0,0,0,.7) inset;
+  }
+  /* лёгкий «живой» микрофликер у включённых (чтобы не были мёртвыми на взгляд) */
+  @keyframes microFlick {
+    0%,100% { opacity:1; filter:brightness(1) }
+    50% { opacity:.96; filter:brightness(.98) }
+  }
+  .lamp-sign .bulb.on { animation: microFlick 2.6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 27ms); }
+  `;
+  const el = document.createElement("style");
+  el.textContent = css;
+  document.head.appendChild(el);
+}
+
+// простые «скелеты» букв (набор отрезков), координаты в системе 0..1 (по ширине/высоте буквы)
+const Letter = {
+  R: [
+    // вертикаль слева
+    [[0.05,0.05],[0.05,0.95]],
+    // верхняя дуга/горизонталь
+    [[0.05,0.05],[0.65,0.05]],
+    [[0.65,0.05],[0.75,0.15]],
+    [[0.75,0.15],[0.75,0.42]],
+    [[0.75,0.42],[0.65,0.50]],
+    [[0.65,0.50],[0.05,0.50]],
+    // диагональ ноги
+    [[0.05,0.50],[0.80,0.95]]
+  ],
+  A: [
+    [[0.05,0.95],[0.35,0.05]],
+    [[0.35,0.05],[0.65,0.95]],
+    [[0.18,0.55],[0.52,0.55]]
+  ],
+  F: [
+    [[0.05,0.05],[0.05,0.95]],
+    [[0.05,0.05],[0.75,0.05]],
+    [[0.05,0.50],[0.60,0.50]]
+  ],
+  G: [
+    [[0.70,0.25],[0.55,0.10]],
+    [[0.55,0.10],[0.25,0.10]],
+    [[0.25,0.10],[0.10,0.25]],
+    [[0.10,0.25],[0.10,0.75]],
+    [[0.10,0.75],[0.25,0.90]],
+    [[0.25,0.90],[0.60,0.90]],
+    [[0.60,0.90],[0.75,0.75]],
+    // «заход» внутрь
+    [[0.40,0.58],[0.78,0.58]]
+  ],
+  M: [
+    [[0.05,0.95],[0.05,0.05]],
+    [[0.05,0.05],[0.35,0.55]],
+    [[0.35,0.55],[0.65,0.05]],
+    [[0.65,0.05],[0.65,0.95]]
+  ],
+  E: [
+    [[0.70,0.05],[0.10,0.05]],
+    [[0.10,0.05],[0.10,0.95]],
+    [[0.10,0.50],[0.60,0.50]],
+    [[0.10,0.95],[0.70,0.95]]
+  ],
+  SPACE: [] // пробел
+};
+
+// дискретизация отрезка точками через шаг
+function sampleSegment(p1, p2, stepPx, boxW, boxH){
+  const [x1,y1] = p1, [x2,y2] = p2;
+  const dx = (x2-x1)*boxW, dy=(y2-y1)*boxH;
+  const dist = Math.hypot(dx,dy);
+  const steps = Math.max(1, Math.floor(dist / stepPx));
+  const out = [];
+  for(let i=0;i<=steps;i++){
+    const t = i/steps;
+    out.push([ (x1 + (x2-x1)*t)*boxW, (y1 + (y2-y1)*t)*boxH ]);
+  }
+  return out;
+}
+
+// создаём лампочку
+function createBulb(x, y, idx){
+  const b = document.createElement("div");
+  b.className = "bulb on";
+  b.style.left = `${x}px`;
+  b.style.top  = `${y}px`;
+  b.style.setProperty("--i", String(idx%200));
+
+  const core = document.createElement("span"); core.className="b-core";
+  const glow = document.createElement("span"); glow.className="b-glow";
+  const glass= document.createElement("span"); glass.className="b-glass";
+  b.appendChild(core); b.appendChild(glow); b.appendChild(glass);
+  return b;
+}
+
+// рендер вывески «Raf Game»
+function buildLampSign(){
+  if (!$lampSign) return;
+  injectLampStyles();
+
+  const text = "RAF GAME"; // верхний регистр для упрощения набора
+  const rect = $lampSign.getBoundingClientRect();
+  const W = rect.width || 640;
+  const H = rect.height || 160;
+
+  // параметры
+  const letterCount = 7;
+  const spacing = Math.max(10, Math.floor(W * 0.012)); // межбуквенный
+  const letterW = Math.min((W - spacing*6) / letterCount, 86);
+  const letterH = Math.min(H * 0.78, 120);
+  const offsetY = (H - letterH)/2 + 6;
+
+  const step = Math.max(8, Math.floor(letterW/8)); // шаг ламп вдоль линий
+  const arcAmp = Math.min(18, H*0.12);             // высота дуги (мягкая)
+
+  const map = { "R":"R", "A":"A", "F":"F", "G":"G", "M":"M", "E":"E", " ":"SPACE" };
+
+  let xCursor = (W - (letterW*letterCount + spacing*6)) / 2;
+  const bulbs = [];
+
+  let idx=0;
+  for (const ch of text){
+    const key = map[ch] || "SPACE";
+    if (key === "SPACE"){ xCursor += letterW + spacing; continue; }
+
+    const segs = Letter[key];
+    for (const seg of segs){
+      const pts = sampleSegment(seg[0], seg[1], step, letterW, letterH);
+      for (const [lx,ly] of pts){
+        const gx = xCursor + lx;
+        // лёгкая дуга по всей надписи (минимальная)
+        const rel = (gx / W) - 0.5;
+        const gy = offsetY + ly - (arcAmp * (1 - Math.pow(rel*2, 2)) * 0.30);
+
+        const el = createBulb(gx, gy, idx++);
+        $lampSign.appendChild(el);
+        bulbs.push({ el, state:"on", timer:null });
+      }
+    }
+    xCursor += letterW + spacing;
+  }
+
+  // часть — «сгоревшие»
+  const burnedPct = 0.08;
+  bulbs.forEach(b=>{
+    if (Math.random() < burnedPct){
+      b.state = "dead";
+      b.el.classList.remove("on"); b.el.classList.remove("off"); b.el.classList.add("dead");
+    }
+  });
+
+  // случайное выключение
+  setInterval(() => {
+    for (const b of bulbs){
+      if (b.state === "dead" || b.state === "off") continue;
+      if (Math.random() < 0.05){ // 5% шанс/сек
+        b.state = "off";
+        b.el.classList.remove("on"); b.el.classList.add("off");
+        const t = randInt(1000, 5000);
+        b.timer = setTimeout(()=>{
+          if (b.state === "off"){
+            b.state = "on";
+            b.el.classList.remove("off"); b.el.classList.add("on");
+          }
+        }, t);
+      }
+    }
+  }, 1000);
+
+  $lampSign.classList.add("has-bulbs");
+  // убираем псевдотекст-плейсхолдер
+  $lampSign.setAttribute("aria-label","");
+  state.bulbs = bulbs;
+}
+
 // ===== Init
 (async function init(){
   try{
     const oldBuild = Number(localStorage.getItem(LS_BUILD)||"0");
     if (oldBuild !== APP_BUILD){
-      localStorage.removeItem(LS_SAVE);     // важный сброс — чтобы "Начать" имело смысл
+      localStorage.removeItem(LS_SAVE);
       localStorage.setItem(LS_BUILD, String(APP_BUILD));
     }
 
@@ -738,6 +959,9 @@ function startHeartbeat(){
 
     document.body.classList.remove("booting");
     document.body.classList.add("ready");
+
+    // построим ламповую вывеску
+    buildLampSign();
 
     if (state.auth.verified) openMainMenu();
     else openRegistration();
