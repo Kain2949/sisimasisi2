@@ -68,14 +68,29 @@
     </div>
   </dialog>
 
-  <!-- ГЛАВНОЕ ОВЕРЛЕЙ: меню/регистрация/лидерборд -->
+  <!-- ГЛАВНОЕ ОВЕРЛЕЙ: меню/регистрация/лидерборд/настройки -->
   <div id="overlay" class="overlay hidden">
+
     <!-- Главное меню -->
     <div id="menuPanel" class="panel hidden">
-      <h1 class="brand">Raf game</h1>
+      <div class="brand">
+        <svg class="brand-svg" viewBox="0 0 600 220" aria-hidden="true">
+          <defs>
+            <linearGradient id="grad" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stop-color="#bcd3ff"/>
+              <stop offset="1" stop-color="#ffffff"/>
+            </linearGradient>
+          </defs>
+          <path id="arc" d="M60,150 C160,60 440,60 540,150" fill="none" stroke="none"/>
+          <text fill="url(#grad)" class="brand-text">
+            <textPath href="#arc" startOffset="50%" text-anchor="middle">Raf Game</textPath>
+          </text>
+        </svg>
+      </div>
+
       <div class="menu-col">
         <button id="btnStart" class="cta">Начать</button>
-        <button id="btnContinue" class="cta ghost">продолжить</button>
+        <button id="btnContinue" class="cta ghost">Продолжить</button>
       </div>
       <div class="menu-bottom">
         <button id="btnLeaderboard" class="round" title="Лидерборд">🏆</button>
@@ -95,12 +110,14 @@
           <input id="regTag" type="text" maxlength="32" placeholder="@kain2949" />
         </label>
 
-        <label>Пол
-          <select id="regGender">
-            <option value="m">мужской</option>
-            <option value="f">женский</option>
-          </select>
-        </label>
+        <!-- Переключатель пола: две кнопки -->
+        <div class="gender-toggle" id="regGender">
+          <span>Пол</span>
+          <div class="pills">
+            <button type="button" class="pill active" data-val="m" id="btnMale">Мужской</button>
+            <button type="button" class="pill" data-val="f" id="btnFemale">Женский</button>
+          </div>
+        </div>
 
         <div class="dual">
           <button id="btnSendCode" class="btn">Отправить код</button>
@@ -119,19 +136,42 @@
         <button class="btn quiet" id="lbBack">Назад</button>
       </div>
     </div>
+
+    <!-- Настройки -->
+    <div id="settingsPanel" class="panel hidden">
+      <h2>Настройки</h2>
+      <div class="form">
+        <label class="row between">
+          <span>Помехи при переходах</span>
+          <input id="fxEnable" type="checkbox" />
+        </label>
+        <label>
+          Шанс появления помех, %
+          <input id="fxChance" type="range" min="0" max="100" step="5" />
+          <div class="muted" id="fxChanceVal">50%</div>
+        </label>
+      </div>
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <button class="btn quiet" id="settingsBack">Назад</button>
+      </div>
+    </div>
+
   </div>
 
-  <!-- ВНУТРЕННЕЕ МЕНЮ -->
+  <!-- ВНУТРИИГРОВОЕ МЕНЮ -->
   <div id="ingameOverlay" class="overlay hidden">
-    <div class="panel small">
+    <div class="panel small gm-panel">
+      <button class="close close-gm" id="gmClose" aria-label="Закрыть">✕</button>
       <div class="vstack">
         <button id="gmInventory" class="btn">Инвентарь</button>
         <button id="gmFlags" class="btn">Флаги</button>
-        <button id="gmSaveExit" class="btn danger">Сохранить и выйти в меню</button>
-        <button id="gmBack" class="btn quiet">Назад в игру</button>
+        <button id="gmSaveExit" class="btn warn">Сохранить и выйти в меню</button>
       </div>
     </div>
   </div>
+
+  <!-- Визуальные помехи -->
+  <div id="fx" class="fx hidden" aria-hidden="true"></div>
 
   <script src="app.js"></script>
 </body>

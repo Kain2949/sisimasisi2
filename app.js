@@ -1,6 +1,6 @@
 /* Raf game — WebApp (сцены из scenes.json) */
 
-const APP_BUILD = 8;
+const APP_BUILD = 9;
 
 // Telegram
 const tg = window.Telegram?.WebApp;
@@ -56,10 +56,12 @@ const $timer       = document.getElementById("timer");
 const $menuBtn     = document.getElementById("menuBtn");
 
 // overlay
-const $overlay     = document.getElementById("overlay");
-const $menuPanel   = document.getElementById("menuPanel");
-const $regPanel    = document.getElementById("regPanel");
-const $lbPanel     = document.getElementById("lbPanel");
+const $overlay       = document.getElementById("overlay");
+const $menuPanel     = document.getElementById("menuPanel");
+const $regPanel      = document.getElementById("regPanel");
+const $lbPanel       = document.getElementById("lbPanel");
+const $settingsPanel = document.getElementById("settingsPanel");
+
 const $btnStart    = document.getElementById("btnStart");
 const $btnContinue = document.getElementById("btnContinue");
 const $btnSettings = document.getElementById("btnSettings");
@@ -68,30 +70,44 @@ const $btnLeaderboard = document.getElementById("btnLeaderboard");
 // registration
 const $regNick     = document.getElementById("regNick");
 const $regTag      = document.getElementById("regTag");
-const $regGender   = document.getElementById("regGender");
+const $regMsg      = document.getElementById("regMsg");
+// gender pills
+const $btnMale     = document.getElementById("btnMale");
+const $btnFemale   = document.getElementById("btnFemale");
+
+// verify
 const $btnSendCode = document.getElementById("btnSendCode");
 const $regCode     = document.getElementById("regCode");
 const $btnVerify   = document.getElementById("btnVerify");
-const $regMsg      = document.getElementById("regMsg");
 
 // leaderboard
 const $lbList      = document.getElementById("lbList");
 const $lbBack      = document.getElementById("lbBack");
+
+// settings
+const $fxEnable    = document.getElementById("fxEnable");
+const $fxChance    = document.getElementById("fxChance");
+const $fxChanceVal = document.getElementById("fxChanceVal");
+const $settingsBack= document.getElementById("settingsBack");
+const $fx          = document.getElementById("fx");
 
 // ingame menu
 const $ingameOverlay = document.getElementById("ingameOverlay");
 const $gmInventory   = document.getElementById("gmInventory");
 const $gmFlags       = document.getElementById("gmFlags");
 const $gmSaveExit    = document.getElementById("gmSaveExit");
-const $gmBack        = document.getElementById("gmBack");
+const $gmClose       = document.getElementById("gmClose");
 
 // Config
 const IMG_BASE = "images/";
 const SCENES_URL = "scenes.json";
-const LS_SCENES = "scenes_cache_v1";
-const LS_SAVE   = "game115";
-const LS_AUTH   = "auth115";
-const LS_BUILD  = "build115";
+
+const LS_SCENES   = "scenes_cache_v1";
+const LS_SAVE     = "game115";
+const LS_AUTH     = "auth115";
+const LS_BUILD    = "build115";
+const LS_SETTINGS = "settings115";
+
 const TYPEWRITE_MAX_MS = 3000;
 const HEARTBEAT_MS = 15000;
 
@@ -107,7 +123,8 @@ const state = {
   running: false,
   tick: null,
   typing: false,
-  auth: { verified:false, nickname:"", tag:"", gender:"m" }
+  auth: { verified:false, nickname:"", tag:"", gender:"m" },
+  settings: { fxEnabled: true, fxChance: 50 }
 };
 
 const imageCache = {};
@@ -117,6 +134,7 @@ let preloadDone = false;
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const send  = (event, payload) => { if (tg?.sendData) tg.sendData(JSON.stringify({ event, payload })); };
 const fmtTime = (sec) => `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(Math.floor(sec%60)).padStart(2,"0")}`;
+function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
 
 function startTimer(){
   if (state.tick) clearInterval(state.tick);
@@ -280,9 +298,26 @@ function loadAuth(){
   }catch{}
 }
 
+// Settings
+function saveSettings(){ localStorage.setItem(LS_SETTINGS, JSON.stringify(state.settings)); }
+function loadSettings(){
+  try{
+    const s = JSON.parse(localStorage.getItem(LS_SETTINGS)||"{}");
+    if (typeof s.fxEnabled === "boolean") state.settings.fxEnabled = s.fxEnabled;
+    if (typeof s.fxChance  === "number")  state.settings.fxChance  = Math.max(0, Math.min(100, s.fxChance));
+  }catch{}
+  if ($fxEnable) $fxEnable.checked = !!state.settings.fxEnabled;
+  if ($fxChance){
+    $fxChance.value = String(state.settings.fxChance);
+    $fxChanceVal.textContent = `${state.settings.fxChance}%`;
+  }
+}
+$fxEnable?.addEventListener("change", () => { state.settings.fxEnabled = $fxEnable.checked; saveSettings(); });
+$fxChance?.addEventListener("input", () => { state.settings.fxChance = Number($fxChance.value||"0"); $fxChanceVal.textContent = `${state.settings.fxChance}%`; saveSettings(); });
+
 // Overlay helpers
 function showOverlay(panel){
-  for (const el of [$menuPanel,$regPanel,$lbPanel]) el?.classList.add("hidden");
+  for (const el of [$menuPanel,$regPanel,$lbPanel,$settingsPanel]) el?.classList.add("hidden");
   if (panel) panel.classList.remove("hidden");
   $overlay.classList.remove("hidden");
   pauseTimer();
@@ -300,7 +335,7 @@ function openMainMenu(){
 function openRegistration(){
   $regNick.value   = state.auth.nickname||"";
   $regTag.value    = state.auth.tag||"";
-  $regGender.value = state.auth.gender||"m";
+  setGender(state.auth.gender||"m");
   $regMsg.textContent = "";
   showOverlay($regPanel);
 }
@@ -320,13 +355,24 @@ function openLeaderboard(){
     `).join("");
   }).catch(()=>{ $lbList.innerHTML = `<div class="muted">Ошибка сети</div>`; });
 }
+function openSettings(){ showOverlay($settingsPanel); }
+$btnSettings?.addEventListener("click", openSettings);
+$settingsBack?.addEventListener("click", openMainMenu);
 
 // Main menu
-$btnStart?.addEventListener("click", () => {
-  if (!state.auth.verified) return;
-  state.startedAt = new Date().toISOString();
+function resetGame(){
+  localStorage.removeItem(LS_SAVE);
+  state.current = "start";
+  state.inventory = {};
+  state.flags = {};
+  state.lastBg = null;
   state.elapsedSec = 0;
   $timer.textContent = "00:00";
+}
+$btnStart?.addEventListener("click", () => {
+  if (!state.auth.verified) return;
+  resetGame();
+  state.startedAt = new Date().toISOString();
   hideOverlay();
   renderScene("start");
   send("start_new", {});
@@ -337,9 +383,18 @@ $btnContinue?.addEventListener("click", () => {
   renderScene(has ? state.current : "start");
   send("continue_game", {});
 });
-$btnSettings?.addEventListener("click", () => alert("Настройки позже."));
 $btnLeaderboard?.addEventListener("click", openLeaderboard);
 $lbBack?.addEventListener("click", () => openMainMenu());
+
+// Gender pills
+function setGender(val){
+  state.auth.gender = val;
+  saveAuth();
+  $btnMale.classList.toggle("active", val==="m");
+  $btnFemale.classList.toggle("active", val==="f");
+}
+$btnMale?.addEventListener("click", () => setGender("m"));
+$btnFemale?.addEventListener("click", () => setGender("f"));
 
 // Registration via API
 let REG_ID = null;
@@ -348,14 +403,13 @@ let REG_STATUS_TIMER = null;
 $btnSendCode?.addEventListener("click", async () => {
   const nickname = ($regNick.value||"").trim();
   let tag = ($regTag.value||"").trim();
-  const gender = $regGender.value || "m";
+  const gender = state.auth.gender || "m";
 
   if (!nickname || !tag){ $regMsg.textContent = "Укажи ник и тег."; return; }
   if (!tag.startsWith("@")) tag = "@"+tag;
 
   state.auth.nickname = nickname;
   state.auth.tag = tag;
-  state.auth.gender = gender;
   saveAuth();
 
   $regMsg.textContent = "Отправляю...";
@@ -425,7 +479,9 @@ $btnVerify?.addEventListener("click", async () => {
       $regMsg.textContent = "Верификация пройдена. Можно играть.";
       openMainMenu();
     } else {
-      if (resp.reason === "bad_code"){
+      if (resp.reason === "banned"){
+        $regMsg.textContent = "Пол женский — доступ запрещён навсегда.";
+      } else if (resp.reason === "bad_code"){
         $regMsg.textContent = `Неверный код. Осталось попыток: ${resp.left}`;
       } else if (resp.reason === "locked"){
         $regMsg.textContent = "Блок на час за перебор неверных кодов.";
@@ -449,10 +505,9 @@ $menuBtn?.addEventListener("click", () => {
     $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down"); startTimer();
   }
 });
+$gmClose?.addEventListener("click", () => { $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down"); startTimer(); });
 $gmInventory?.addEventListener("click", () => { renderInventory(); document.getElementById("invDlg").showModal(); });
 $gmFlags?.addEventListener("click", () => { renderFlags(); document.getElementById("flagsDlg").showModal(); });
-document.getElementById("invClose")?.addEventListener("click", () => document.getElementById("invDlg").close());
-document.getElementById("flagsClose")?.addEventListener("click", () => document.getElementById("flagsDlg").close());
 
 $gmSaveExit?.addEventListener("click", async () => {
   saveLocal();
@@ -467,13 +522,31 @@ $gmSaveExit?.addEventListener("click", async () => {
   $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down");
   openMainMenu();
 });
-$gmBack?.addEventListener("click", () => { $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down"); startTimer(); });
+
+// FX: визуальные помехи
+async function playFx(){
+  const kinds = ["noise","glitch","rgb","scan","roll","pixel","flash"];
+  const kind = kinds[randInt(0, kinds.length-1)];
+  const dur = randInt(500, 1200); // мс
+  $fx.className = `fx ${kind}`;
+  $fx.style.setProperty("--dur", `${dur}ms`);
+  $fx.classList.remove("hidden");
+  await sleep(dur);
+  $fx.classList.add("hidden");
+}
+async function maybeFx(){
+  if (!state.settings.fxEnabled) return;
+  const chance = Number(state.settings.fxChance||0);
+  if (Math.random()*100 <= chance){ await playFx(); }
+}
 
 // Scene render
 async function renderScene(key){
   const sc = state.scenes[key];
   if (!sc) return;
   state.current = key;
+
+  await maybeFx(); // эффекты перед сменой
 
   if (sc.image){
     await blink(220);
@@ -532,6 +605,7 @@ function startHeartbeat(){
     fastPreload(imgs, progress);
 
     loadAuth();
+    loadSettings();
     loadLocal();
     if (!state.startedAt) state.startedAt = new Date().toISOString();
 
