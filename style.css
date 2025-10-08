@@ -1,57 +1,38 @@
 /* ================================
-   THEME (темнее, холодная синь)
+   DARK THEME (ещё темнее)
    ================================ */
 :root{
-  --bg:           #06080c;    /* почти чёрный с лёгкой синевой */
-  --surface:      #0b1017;    /* общие панели/карточки */
-  --surface-2:    #0d1524;    /* кнопки/HUD */
-  --surface-3:    #0f172a;    /* опции/hover */
-  --ink:          #e9edf4;    /* текст */
-  --muted:        #9aa6bd;    /* вторичный */
+  --bg:           #03060a;    /* почти чёрный с лёгкой синевой */
+  --surface:      #081019;    /* общие панели/карточки */
+  --surface-2:    #0a1320;    /* кнопки/HUD */
+  --surface-3:    #0c1a2b;    /* hover/акцент */
+  --ink:          #eaf0ff;    /* текст */
+  --muted:        #a3b0c9;    /* вторичный */
   --accent:       #1f6cff;    /* подсветка/прогресс */
   --accent-2:     #6ee7ff;
 
   --radius:       18px;
-  --shadow:       0 10px 30px rgba(0,0,0,.45);
+  --shadow:       0 12px 32px rgba(0,0,0,.55);
   --border:       1px solid rgba(255,255,255,.06);
 }
 
-/* ================================
-   BASE
-   ================================ */
-*{
-  box-sizing: border-box;
-}
-
-html, body{
-  height: 100%;
-}
-
+*{ box-sizing: border-box; }
+html, body{ height: 100%; }
 body{
   margin: 0;
   background: var(--bg);
   color: var(--ink);
   font: 16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
-
-.hidden{
-  display: none !important;
-}
+.hidden{ display: none !important; }
 
 /* во время прелоада прячем сцену */
-body.booting .stage{
-  opacity: 0;
-  pointer-events: none;
-}
+body.booting .stage{ opacity: 0; pointer-events: none; }
 
 /* ================================
    LAYOUT
    ================================ */
-#app{
-  max-width: 1200px;
-  margin: 24px auto;
-  padding: 0 16px;
-}
+#app{ max-width: 1200px; margin: 24px auto; padding: 0 16px; }
 
 .stage{
   display: grid;
@@ -77,21 +58,16 @@ body.looking-down #stage{
   overflow: hidden;
 }
 
-#desc{
-  min-height: 520px;
-  display: flex;
-  flex-direction: column;
-}
+#desc{ min-height: 520px; display: flex; flex-direction: column; }
 
 /* ФОН — через <img> */
 #bgImg{
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;        /* чётко, без дымки */
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
   object-position: center;
   pointer-events: none;
+  filter: brightness(.88);
 }
 
 /* ТЕКСТ СЦЕНЫ */
@@ -102,17 +78,10 @@ body.looking-down #stage{
   min-height: 160px;
 }
 
-/* никаких подсказок про "нажми на текст" */
-
 /* ================================
    ПРАВАЯ КОЛОНКА: ОПЦИИ
    ================================ */
-.stack{
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-}
+.stack{ display: flex; flex-direction: column; gap: 12px; padding: 16px; }
 
 .option{
   display: block;
@@ -126,25 +95,16 @@ body.looking-down #stage{
   cursor: pointer;
   transition: .2s transform, .2s background, .2s opacity, .2s border-color;
 }
-
-.option:hover{
-  transform: translateY(-2px);
-  background: var(--surface-3);
-}
+.option:hover{ transform: translateY(-2px); background: var(--surface-3); }
 
 /* ================================
    НИЖНЯЯ ПЛАТФОРМА HUD
    ================================ */
 .hudbar{
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
-  display: flex;
-  align-items: center;
-  padding: 10px 12px;
-  gap: 12px;
-  background: rgba(8,12,20,.55);
+  position: absolute; left: 16px; right: 16px; bottom: 16px;
+  display: flex; align-items: center;
+  padding: 10px 12px; gap: 12px;
+  background: rgba(6,10,16,.6);
   border: var(--border);
   border-radius: 14px;
   backdrop-filter: blur(6px);
@@ -160,39 +120,31 @@ body.looking-down #stage{
   color: #d0d8ea;
 }
 
+/* уменьшили кнопку меню в 1.5–2 раза */
 .hud-menu{
-  width: 52px;
-  height: 52px;
+  width: 36px; height: 36px;
   border-radius: 50%;
   border: var(--border);
   background: var(--surface-2);
   color: var(--ink);
   cursor: pointer;
-  font-size: 20px;
+  font-size: 16px;
   line-height: 1;
-  display: grid;
-  place-items: center;
+  display: grid; place-items: center;
   box-shadow: var(--shadow);
   transition: .2s transform, .2s background, .2s opacity;
 }
-
-.hud-menu:hover{
-  transform: translateY(-1px);
-  background: var(--surface-3);
-}
+.hud-menu:hover{ transform: translateY(-1px); background: var(--surface-3); }
 
 /* ================================
    BOOT
    ================================ */
 .boot{
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  display: grid;
-  place-items: center;
+  position: fixed; inset: 0;
+  background: var(--bg);               /* непрозрачный — ничего не просвечивает */
+  display: grid; place-items: center;
   z-index: 10000;
 }
-
 .boot-box{
   width: min(520px, 92vw);
   background: var(--surface);
@@ -201,215 +153,101 @@ body.looking-down #stage{
   padding: 22px;
   box-shadow: var(--shadow);
 }
-
-.boot-title{
-  font-weight: 700;
-  margin-bottom: 12px;
-}
-
-.boot-progress{
-  height: 10px;
-  background: #0b111a;
-  border-radius: 999px;
-  overflow: hidden;
-  margin: 10px 0;
-}
-
-.boot-progress > #bootBar{
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  transition: width .15s ease;
-}
-
-.boot-meta{
-  display: flex;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-/* скрыть после готовности */
+.boot-title{ font-weight: 700; margin-bottom: 12px; }
+.boot-progress{ height: 10px; background: #0b111a; border-radius: 999px; overflow: hidden; margin: 10px 0; }
+.boot-progress > #bootBar{ height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .15s ease; }
+.boot-meta{ display: flex; gap: 8px; font-size: 13px; color: var(--muted); }
 body.ready .boot{ display: none; }
 
 /* ================================
    OVERLAYS
    ================================ */
 .overlay{
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgba(0,0,0,.52);
-  backdrop-filter: blur(2px);
+  position: fixed; inset: 0;
+  display: grid; place-items: center;
+  background: var(--bg);               /* сплошной фон — за меню ничего не видно */
   z-index: 10001;
 }
-
 .panel{
-  width: min(560px, 92vw);
+  width: min(600px, 92vw);
   background: var(--surface);
   border: var(--border);
   border-radius: 16px;
-  padding: 22px;
+  padding: 22px 22px 28px;
   box-shadow: var(--shadow);
 }
+.panel.small{ width: min(420px, 92vw); }
 
-.panel.small{
-  width: min(420px, 92vw);
-}
+.brand{ margin: 0 0 24px 0; font-size: 40px; text-align: center; }
 
-.brand{
-  margin: 0 0 16px 0;
-  font-size: 32px;
-  text-align: center;
-}
-
-.menu-col{
-  display: grid;
-  gap: 12px;
-}
-
+/* главное меню */
+.menu-col{ display: grid; gap: 16px; }
 .cta{
-  width: 100%;
-  appearance: none;
-  border: var(--border);
-  padding: 18px 24px;
-  border-radius: 999px;
-  background: var(--surface-2);
-  color: var(--ink);
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: .2s transform, .2s background;
+  width: 100%; appearance: none; border: var(--border);
+  padding: 20px 24px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink);
+  font-size: 22px; font-weight: 800;
+  cursor: pointer; transition: .2s transform, .2s background;
   text-align: center;
 }
+.cta:hover{ transform: translateY(-1px); background: var(--surface-3); }
+.cta.ghost{ font-weight: 600; opacity: .95; }
 
-.cta:hover{
-  transform: translateY(-1px);
-  background: var(--surface-3);
-}
-
-.cta.ghost{
-  font-weight: 500;
-  opacity: .95;
-}
-
+/* нижние круглые — СПРАВА СНИЗУ */
 .menu-bottom{
-  margin-top: 16px;
-  display: flex;
-  justify-content: center;
-  gap: 16px;
+  margin-top: 16px; display: flex; justify-content: flex-end; gap: 16px;
 }
-
 .round{
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: var(--border);
-  background: var(--surface-2);
-  color: var(--ink);
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition: .2s transform, .2s background;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: var(--border); background: var(--surface-2);
+  color: var(--ink); box-shadow: var(--shadow);
+  cursor: pointer; transition: .2s transform, .2s background;
 }
-
-.round:hover{
-  transform: translateY(-1px);
-  background: var(--surface-3);
-}
+.round:hover{ transform: translateY(-1px); background: var(--surface-3); }
 
 /* Регистрация */
-.form{
-  display: grid;
-  gap: 12px;
-}
-
-label{
-  display: grid;
-  gap: 6px;
-  font-size: 14px;
-  color: #c8d1e3;
-}
-
+.form{ display: grid; gap: 12px; }
+label{ display: grid; gap: 6px; font-size: 14px; color: #c8d1e3; }
 input, select{
-  appearance: none;
-  background: #0a0f18;
-  color: var(--ink);
-  border: var(--border);
-  border-radius: 10px;
-  padding: 12px 12px;
-  outline: none;
+  appearance: none; background: #09101a; color: var(--ink);
+  border: var(--border); border-radius: 10px; padding: 12px 12px; outline: none;
 }
-
-.dual{
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-}
-
+.dual{ display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 .btn{
-  appearance: none;
-  border: var(--border);
-  background: var(--surface-2);
-  color: var(--ink);
-  border-radius: 12px;
-  padding: 12px 14px;
-  cursor: pointer;
-  transition: .2s transform, .2s background, .2s opacity;
+  appearance: none; border: var(--border); background: var(--surface-2);
+  color: var(--ink); border-radius: 12px; padding: 12px 14px;
+  cursor: pointer; transition: .2s transform, .2s background, .2s opacity;
 }
-
-.btn:hover{
-  transform: translateY(-1px);
-  background: var(--surface-3);
-}
-
+.btn:hover{ transform: translateY(-1px); background: var(--surface-3); }
 .btn.quiet{ opacity: .9; }
 .btn.danger{ background: #1f2636; border-color: rgba(255,80,80,.35); }
 
 .muted{ color: var(--muted); font-size: 13px; }
 
-/* Внутреннее меню */
-.vstack{ display: grid; gap: 10px; }
+/* Лидерборд */
+.lb-list{ display: grid; gap: 10px; margin-top: 8px; }
+.lb-list .row{
+  display: grid; grid-template-columns: 44px 1fr 1fr 90px;
+  gap: 8px; align-items: center; padding: 10px 12px;
+  background: var(--surface-2); border: var(--border); border-radius: 12px;
+}
+.lb-list .pos{ text-align: center; font-weight: 700; color: #b9c6ff; }
+.lb-list .tag{ opacity: .95; }
+.lb-list .time{ text-align: right; color: #dfe6ff; }
 
 /* Диалоги */
-dialog{
-  border: 0;
-  border-radius: 14px;
-  background: var(--surface);
-  color: var(--ink);
-  padding: 0;
-  box-shadow: var(--shadow);
-}
+dialog{ border: 0; border-radius: 14px; background: var(--surface); color: var(--ink); padding: 0; box-shadow: var(--shadow); }
 dialog::backdrop{ background: rgba(0,0,0,.45); backdrop-filter: blur(2px); }
 dialog .dlg-body{ padding: 20px 22px 12px; min-width: 300px; max-width: 92vw; max-height: 72vh; overflow: auto; }
-dialog .close{
-  position: absolute;
-  right: 6px;
-  top: 6px;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: 18px;
-  cursor: pointer;
-}
-
+dialog .close{ position: absolute; right: 6px; top: 6px; border: 0; background: transparent; color: var(--muted); font-size: 18px; cursor: pointer; }
 .list{ display: grid; gap: 8px; margin-top: 8px; font-size: 14px; color: #d7dbe6; }
 
 /* Веки */
-.eyelid{
-  position: fixed;
-  left: 0; right: 0;
-  height: 0;
-  background: #000;
-  z-index: 9999;
-  transition: height .18s ease;
-  pointer-events: none;
-}
-.eyelid.top{ top: 0; }
-.eyelid.bot{ bottom: 0; }
+.eyelid{ position: fixed; left: 0; right: 0; height: 0; background: #000; z-index: 9999; transition: height .18s ease; pointer-events: none; }
+.eyelid.top{ top: 0; } .eyelid.bot{ bottom: 0; }
 
 /* Респонсив */
 @media (max-width: 980px){
   .stage{ grid-template-columns: 1fr; }
-  .dual{ grid-template-columns: 1fr; } /* регистрация в 2 строки на мобилке */
+  .dual{ grid-template-columns: 1fr; }
 }

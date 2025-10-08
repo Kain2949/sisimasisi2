@@ -1,19 +1,46 @@
 /* Raf game — WebApp (сцены из scenes.json) */
 
-const APP_BUILD = 7;
+const APP_BUILD = 8;
 
 // Telegram
 const tg = window.Telegram?.WebApp;
 if (tg) {
   try {
     tg.expand();
-    tg.setBackgroundColor("#06080c");
+    tg.setBackgroundColor("#03060a");
     tg.setHeaderColor("secondary");
   } catch {}
 }
 
+// === API конфиг ===
+const API_BASE = "https://kristan-labored-earsplittingly.ngrok-free.dev";
+const API_KEY  = "super_secret_key_3481gfej83f";
+
+async function api(path, body) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-API-KEY": API_KEY },
+    body: JSON.stringify(body || {})
+  });
+  return res.json();
+}
+async function apiStatus(regId) {
+  const res = await fetch(`${API_BASE}/api/registration/status?reg_id=${encodeURIComponent(regId)}`, {
+    headers: { "X-API-KEY": API_KEY }
+  });
+  return res.json();
+}
+async function apiTop(limit=30){
+  const res = await fetch(`${API_BASE}/api/leaderboard/top?limit=${limit}`, {
+    headers: { "X-API-KEY": API_KEY }
+  });
+  return res.json();
+}
+async function apiSubmitLB(tag, nickname, elapsed){
+  return api("/api/leaderboard/submit", { tag, nickname, elapsed_sec: elapsed });
+}
+
 // DOM
-const $stage       = document.getElementById("stage");
 const $descText    = document.getElementById("descText");
 const $bgImg       = document.getElementById("bgImg");
 const $opts        = document.getElementById("options");
@@ -28,22 +55,17 @@ const $eyebot      = document.getElementById("eyelidBot");
 const $timer       = document.getElementById("timer");
 const $menuBtn     = document.getElementById("menuBtn");
 
-const $invDlg      = document.getElementById("invDlg");
-const $flagsDlg    = document.getElementById("flagsDlg");
-const $invClose    = document.getElementById("invClose");
-const $flagsClose  = document.getElementById("flagsClose");
-const $invList     = document.getElementById("invList");
-const $flagsList   = document.getElementById("flagsList");
-
 // overlay
 const $overlay     = document.getElementById("overlay");
 const $menuPanel   = document.getElementById("menuPanel");
 const $regPanel    = document.getElementById("regPanel");
+const $lbPanel     = document.getElementById("lbPanel");
 const $btnStart    = document.getElementById("btnStart");
 const $btnContinue = document.getElementById("btnContinue");
 const $btnSettings = document.getElementById("btnSettings");
 const $btnLeaderboard = document.getElementById("btnLeaderboard");
 
+// registration
 const $regNick     = document.getElementById("regNick");
 const $regTag      = document.getElementById("regTag");
 const $regGender   = document.getElementById("regGender");
@@ -52,34 +74,16 @@ const $regCode     = document.getElementById("regCode");
 const $btnVerify   = document.getElementById("btnVerify");
 const $regMsg      = document.getElementById("regMsg");
 
-// внутр. меню
+// leaderboard
+const $lbList      = document.getElementById("lbList");
+const $lbBack      = document.getElementById("lbBack");
+
+// ingame menu
 const $ingameOverlay = document.getElementById("ingameOverlay");
 const $gmInventory   = document.getElementById("gmInventory");
 const $gmFlags       = document.getElementById("gmFlags");
 const $gmSaveExit    = document.getElementById("gmSaveExit");
 const $gmBack        = document.getElementById("gmBack");
-
-// === API конфиг ===
-const API_BASE = "https://kristan-labored-earsplittingly.ngrok-free.dev";
-const API_KEY  = "super_secret_key_3481gfej83f";
-
-async function api(path, body) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-API-KEY": API_KEY
-    },
-    body: JSON.stringify(body || {})
-  });
-  return res.json();
-}
-async function apiStatus(regId) {
-  const res = await fetch(`${API_BASE}/api/registration/status?reg_id=${encodeURIComponent(regId)}`, {
-    headers: { "X-API-KEY": API_KEY }
-  });
-  return res.json();
-}
 
 // Config
 const IMG_BASE = "images/";
@@ -102,6 +106,7 @@ const state = {
   elapsedSec: 0,
   running: false,
   tick: null,
+  typing: false,
   auth: { verified:false, nickname:"", tag:"", gender:"m" }
 };
 
@@ -109,14 +114,9 @@ const imageCache = {};
 let preloadDone = false;
 
 // Utils
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const send  = (event, payload) => { if (tg?.sendData) tg.sendData(JSON.stringify({ event, payload })); };
-
-const fmtTime = sec => {
-  const m = Math.floor(sec/60);
-  const s = Math.floor(sec%60);
-  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-};
+const fmtTime = (sec) => `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(Math.floor(sec%60)).padStart(2,"0")}`;
 
 function startTimer(){
   if (state.tick) clearInterval(state.tick);
@@ -151,7 +151,6 @@ async function fetchScenes(){
     throw e;
   }
 }
-
 function uniqueImages(scenes){
   const set = new Set();
   for(const k in scenes){
@@ -160,14 +159,11 @@ function uniqueImages(scenes){
   }
   return Array.from(set);
 }
-
 function fastPreload(names, onp){
   let loaded = 0;
   const total = names.length;
   if (total === 0){ onp(1,0,0); preloadDone = true; return; }
-
   const t = setTimeout(() => { preloadDone = true; }, 10000);
-
   names.forEach(name => {
     const img = new Image();
     img.onload = () => {
@@ -188,39 +184,35 @@ async function blink(ms=320){
   $eyetop.style.height = "0";
   $eyebot.style.height = "0";
 }
-
 function setBackground(name, meta={}){
   if (!name) return;
   const url = IMG_BASE + name + `?v=${APP_BUILD}`;
   if ($bgImg.dataset.src === url) return;
   $bgImg.dataset.src = url;
   $bgImg.src = url;
-  if (meta.fit === "contain"){
-    $bgImg.style.objectFit = "contain";
-    $bgImg.style.backgroundColor = "#06080c";
-  } else {
-    $bgImg.style.objectFit = "cover";
-    $bgImg.style.backgroundColor = "transparent";
-  }
+  $bgImg.style.objectFit = (meta.fit === "contain") ? "contain" : "cover";
   $bgImg.style.objectPosition = typeof meta.focus === "string" ? meta.focus : "center";
   state.lastBg = url;
 }
 
-// Typewriter
+// Typewriter (с блокировкой вариантов)
 async function typewrite(node, text){
   const s = String(text||"");
   node.textContent = "";
   if (!s.length) return;
-  let stop=false;
-  const onTap = () => { stop=true; };
-  node.addEventListener("pointerdown", onTap, { once:true });
 
+  state.typing = true;
+  $opts.classList.add("hidden");
   const per = Math.max(10, Math.floor(TYPEWRITE_MAX_MS / s.length));
+
   for(let i=0;i<s.length;i++){
-    if (stop){ node.textContent = s; break; }
     node.textContent += s[i];
+    // eslint-disable-next-line no-await-in-loop
     await sleep(per);
   }
+
+  state.typing = false;
+  $opts.classList.remove("hidden");
 }
 
 function normalizeOptions(sc){
@@ -236,13 +228,13 @@ function normalizeOptions(sc){
 // Inventory / Flags
 function renderInventory(){
   const list = Object.entries(state.inventory||{}).filter(([,n])=>n>0);
-  if (!list.length){ $invList.innerHTML = `<div class="muted">Пусто</div>`; return; }
-  $invList.innerHTML = list.map(([k,n])=>`<div>${k}: ${n} шт</div>`).join("");
+  if (!list.length){ document.getElementById("invList").innerHTML = `<div class="muted">Пусто</div>`; return; }
+  document.getElementById("invList").innerHTML = list.map(([k,n])=>`<div>${k}: ${n} шт</div>`).join("");
 }
 function renderFlags(){
   const list = Object.entries(state.flags||{}).filter(([,v])=>!!v);
-  if (!list.length){ $flagsList.innerHTML = `<div class="muted">Пока нет</div>`; return; }
-  $flagsList.innerHTML = list.map(([k,v])=>`<div>${k}: ${String(v)}</div>`).join("");
+  if (!list.length){ document.getElementById("flagsList").innerHTML = `<div class="muted">Пока нет</div>`; return; }
+  document.getElementById("flagsList").innerHTML = list.map(([k,v])=>`<div>${k}: ${String(v)}</div>`).join("");
 }
 
 // Save / Load local
@@ -288,10 +280,9 @@ function loadAuth(){
   }catch{}
 }
 
-// Overlay
+// Overlay helpers
 function showOverlay(panel){
-  $menuPanel.classList.add("hidden");
-  $regPanel.classList.add("hidden");
+  for (const el of [$menuPanel,$regPanel,$lbPanel]) el?.classList.add("hidden");
   if (panel) panel.classList.remove("hidden");
   $overlay.classList.remove("hidden");
   pauseTimer();
@@ -313,18 +304,24 @@ function openRegistration(){
   $regMsg.textContent = "";
   showOverlay($regPanel);
 }
-function openIngameMenu(){
-  pauseTimer();
-  document.body.classList.add("looking-down");
-  $ingameOverlay.classList.remove("hidden");
-}
-function closeIngameMenu(){
-  $ingameOverlay.classList.add("hidden");
-  document.body.classList.remove("looking-down");
-  startTimer();
+function openLeaderboard(){
+  showOverlay($lbPanel);
+  $lbList.innerHTML = `<div class="muted">Загрузка…</div>`;
+  apiTop().then(r=>{
+    if (!r.ok) { $lbList.innerHTML = `<div class="muted">Ошибка.</div>`; return; }
+    if (!r.items.length){ $lbList.innerHTML = `<div class="muted">Пока пусто</div>`; return; }
+    $lbList.innerHTML = r.items.map((it,i)=>`
+      <div class="row">
+        <div class="pos">${i+1}</div>
+        <div class="tag">${it.tag}</div>
+        <div class="nick">${it.nickname}</div>
+        <div class="time">${fmtTime(it.elapsed_sec)}</div>
+      </div>
+    `).join("");
+  }).catch(()=>{ $lbList.innerHTML = `<div class="muted">Ошибка сети</div>`; });
 }
 
-// Main menu handlers
+// Main menu
 $btnStart?.addEventListener("click", () => {
   if (!state.auth.verified) return;
   state.startedAt = new Date().toISOString();
@@ -341,9 +338,10 @@ $btnContinue?.addEventListener("click", () => {
   send("continue_game", {});
 });
 $btnSettings?.addEventListener("click", () => alert("Настройки позже."));
-$btnLeaderboard?.addEventListener("click", () => alert("Лидерборд доступен командой /top у бота."));
+$btnLeaderboard?.addEventListener("click", openLeaderboard);
+$lbBack?.addEventListener("click", () => openMainMenu());
 
-// === Регистрация через API ===
+// Registration via API
 let REG_ID = null;
 let REG_STATUS_TIMER = null;
 
@@ -445,23 +443,31 @@ $btnVerify?.addEventListener("click", async () => {
 
 // Ingame menu
 $menuBtn?.addEventListener("click", () => {
-  if ($ingameOverlay.classList.contains("hidden")) openIngameMenu();
-  else closeIngameMenu();
+  if ($ingameOverlay.classList.contains("hidden")) {
+    pauseTimer(); document.body.classList.add("looking-down"); $ingameOverlay.classList.remove("hidden");
+  } else {
+    $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down"); startTimer();
+  }
 });
-$gmInventory?.addEventListener("click", () => { renderInventory(); $invDlg.showModal(); });
-$gmFlags?.addEventListener("click", () => { renderFlags(); $flagsDlg.showModal(); });
-$invClose?.addEventListener("click", () => $invDlg.close());
-$flagsClose?.addEventListener("click", () => $flagsDlg.close());
-$gmSaveExit?.addEventListener("click", () => {
+$gmInventory?.addEventListener("click", () => { renderInventory(); document.getElementById("invDlg").showModal(); });
+$gmFlags?.addEventListener("click", () => { renderFlags(); document.getElementById("flagsDlg").showModal(); });
+document.getElementById("invClose")?.addEventListener("click", () => document.getElementById("invDlg").close());
+document.getElementById("flagsClose")?.addEventListener("click", () => document.getElementById("flagsDlg").close());
+
+$gmSaveExit?.addEventListener("click", async () => {
   saveLocal();
+  // отправим прогресс в лидерборд как пример метрики
+  if (state.auth.tag && state.auth.nickname){
+    try { await apiSubmitLB(state.auth.tag, state.auth.nickname, state.elapsedSec); } catch(e){}
+  }
   send("sync_state", {
     scene: state.current, inventory: state.inventory,
     flags: state.flags, last_bg: state.lastBg, elapsed_sec: state.elapsedSec
   });
-  closeIngameMenu();
+  $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down");
   openMainMenu();
 });
-$gmBack?.addEventListener("click", () => { closeIngameMenu(); });
+$gmBack?.addEventListener("click", () => { $ingameOverlay.classList.add("hidden"); document.body.classList.remove("looking-down"); startTimer(); });
 
 // Scene render
 async function renderScene(key){
@@ -473,6 +479,7 @@ async function renderScene(key){
     await blink(220);
     setBackground(sc.image, { fit: sc.fit, focus: sc.focus });
   }
+
   await typewrite($descText, sc.description||"…");
 
   $opts.innerHTML = "";
@@ -486,6 +493,7 @@ async function renderScene(key){
     b.className = "option";
     b.textContent = opt.label;
     b.onclick = async () => {
+      if (state.typing) return; // блокируем клики во время набора
       saveLocal();
       send("choice_made", { from:key, to:opt.next, label:opt.label });
       await sleep(120);
