@@ -1,6 +1,6 @@
 /* Raf game — WebApp (сцены из scenes.json) */
 
-const APP_BUILD = 9;
+const APP_BUILD = 10;
 
 // Telegram
 const tg = window.Telegram?.WebApp;
@@ -89,7 +89,6 @@ const $fxEnable    = document.getElementById("fxEnable");
 const $fxChance    = document.getElementById("fxChance");
 const $fxChanceVal = document.getElementById("fxChanceVal");
 const $settingsBack= document.getElementById("settingsBack");
-const $fx          = document.getElementById("fx");
 
 // ingame menu
 const $ingameOverlay = document.getElementById("ingameOverlay");
@@ -130,12 +129,14 @@ const state = {
 const imageCache = {};
 let preloadDone = false;
 
-// Utils
+// ===== Utils
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 const send  = (event, payload) => { if (tg?.sendData) tg.sendData(JSON.stringify({ event, payload })); };
 const fmtTime = (sec) => `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(Math.floor(sec%60)).padStart(2,"0")}`;
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
 
+// ===== Timer
 function startTimer(){
   if (state.tick) clearInterval(state.tick);
   state.running = true;
@@ -147,7 +148,7 @@ function startTimer(){
 }
 function pauseTimer(){ state.running = false; }
 
-// Boot progress
+// ===== Boot progress
 function progress(p, loaded, total){
   const pct = Math.round(p*100);
   $bootBar.style.width = `${pct}%`;
@@ -155,7 +156,7 @@ function progress(p, loaded, total){
   $bootCnt.textContent = `${loaded}/${total}`;
 }
 
-// Scenes
+// ===== Scenes
 async function fetchScenes(){
   try{
     const res = await fetch(`${SCENES_URL}?v=${APP_BUILD}`, { cache: "no-cache" });
@@ -194,6 +195,7 @@ function fastPreload(names, onp){
   });
 }
 
+// ===== Eye blink
 async function blink(ms=320){
   document.body.offsetTop;
   $eyetop.style.height = "52%";
@@ -213,7 +215,7 @@ function setBackground(name, meta={}){
   state.lastBg = url;
 }
 
-// Typewriter (с блокировкой вариантов)
+// ===== Typewriter
 async function typewrite(node, text){
   const s = String(text||"");
   node.textContent = "";
@@ -243,7 +245,7 @@ function normalizeOptions(sc){
   return out;
 }
 
-// Inventory / Flags
+// ===== Inventory / Flags
 function renderInventory(){
   const list = Object.entries(state.inventory||{}).filter(([,n])=>n>0);
   if (!list.length){ document.getElementById("invList").innerHTML = `<div class="muted">Пусто</div>`; return; }
@@ -255,7 +257,7 @@ function renderFlags(){
   document.getElementById("flagsList").innerHTML = list.map(([k,v])=>`<div>${k}: ${String(v)}</div>`).join("");
 }
 
-// Save / Load local
+// ===== Save / Load local
 function saveLocal(){
   localStorage.setItem(LS_SAVE, JSON.stringify({
     build: APP_BUILD,
@@ -284,7 +286,7 @@ function loadLocal(){
   }catch{}
 }
 
-// Auth
+// ===== Auth
 function saveAuth(){ localStorage.setItem(LS_AUTH, JSON.stringify(state.auth)); }
 function loadAuth(){
   try{
@@ -298,13 +300,13 @@ function loadAuth(){
   }catch{}
 }
 
-// Settings
+// ===== Settings
 function saveSettings(){ localStorage.setItem(LS_SETTINGS, JSON.stringify(state.settings)); }
 function loadSettings(){
   try{
     const s = JSON.parse(localStorage.getItem(LS_SETTINGS)||"{}");
     if (typeof s.fxEnabled === "boolean") state.settings.fxEnabled = s.fxEnabled;
-    if (typeof s.fxChance  === "number")  state.settings.fxChance  = Math.max(0, Math.min(100, s.fxChance));
+    if (typeof s.fxChance  === "number")  state.settings.fxChance  = clamp(s.fxChance, 0, 100);
   }catch{}
   if ($fxEnable) $fxEnable.checked = !!state.settings.fxEnabled;
   if ($fxChance){
@@ -315,7 +317,7 @@ function loadSettings(){
 $fxEnable?.addEventListener("change", () => { state.settings.fxEnabled = $fxEnable.checked; saveSettings(); });
 $fxChance?.addEventListener("input", () => { state.settings.fxChance = Number($fxChance.value||"0"); $fxChanceVal.textContent = `${state.settings.fxChance}%`; saveSettings(); });
 
-// Overlay helpers
+// ===== Overlay helpers
 function showOverlay(panel){
   for (const el of [$menuPanel,$regPanel,$lbPanel,$settingsPanel]) el?.classList.add("hidden");
   if (panel) panel.classList.remove("hidden");
@@ -359,7 +361,7 @@ function openSettings(){ showOverlay($settingsPanel); }
 $btnSettings?.addEventListener("click", openSettings);
 $settingsBack?.addEventListener("click", openMainMenu);
 
-// Main menu
+// ===== Main menu
 function resetGame(){
   localStorage.removeItem(LS_SAVE);
   state.current = "start";
@@ -386,7 +388,7 @@ $btnContinue?.addEventListener("click", () => {
 $btnLeaderboard?.addEventListener("click", openLeaderboard);
 $lbBack?.addEventListener("click", () => openMainMenu());
 
-// Gender pills
+// ===== Gender pills
 function setGender(val){
   state.auth.gender = val;
   saveAuth();
@@ -396,7 +398,7 @@ function setGender(val){
 $btnMale?.addEventListener("click", () => setGender("m"));
 $btnFemale?.addEventListener("click", () => setGender("f"));
 
-// Registration via API
+// ===== Registration via API
 let REG_ID = null;
 let REG_STATUS_TIMER = null;
 
@@ -497,7 +499,7 @@ $btnVerify?.addEventListener("click", async () => {
   }
 });
 
-// Ingame menu
+// ===== Ingame menu
 $menuBtn?.addEventListener("click", () => {
   if ($ingameOverlay.classList.contains("hidden")) {
     pauseTimer(); document.body.classList.add("looking-down"); $ingameOverlay.classList.remove("hidden");
@@ -523,24 +525,118 @@ $gmSaveExit?.addEventListener("click", async () => {
   openMainMenu();
 });
 
-// FX: визуальные помехи
-async function playFx(){
-  const kinds = ["noise","glitch","rgb","scan","roll","pixel","flash"];
-  const kind = kinds[randInt(0, kinds.length-1)];
-  const dur = randInt(500, 1200); // мс
-  $fx.className = `fx ${kind}`;
-  $fx.style.setProperty("--dur", `${dur}ms`);
-  $fx.classList.remove("hidden");
-  await sleep(dur);
-  $fx.classList.add("hidden");
+// ===== FX (CRT + Pixel) via Canvas (auto-created)
+let fxCanvas = null, fxCtx = null, fxDPR = 1, fxActive = false;
+function ensureFxCanvas(){
+  if (fxCanvas) return;
+  fxCanvas = document.createElement("canvas");
+  fxCanvas.id = "fxCanvas";
+  fxCanvas.className = "fx-canvas";
+  document.body.appendChild(fxCanvas);
+  fxCtx = fxCanvas.getContext("2d");
+  const resize = () => {
+    fxDPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1.5));
+    fxCanvas.width  = Math.floor(window.innerWidth  * fxDPR);
+    fxCanvas.height = Math.floor(window.innerHeight * fxDPR);
+    fxCanvas.style.width  = `${window.innerWidth}px`;
+    fxCanvas.style.height = `${window.innerHeight}px`;
+    if (fxCtx) fxCtx.imageSmoothingEnabled = false;
+  };
+  resize();
+  window.addEventListener("resize", resize);
+}
+function clearFx(){
+  if (!fxCtx) return;
+  fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
+}
+function drawNoiseBlocky(alpha=0.18){
+  // рисуем низкорезовый шум и масштабируем
+  const w = Math.max(128, Math.floor(fxCanvas.width / 14));
+  const h = Math.max(72,  Math.floor(fxCanvas.height/ 14));
+  const off = new OffscreenCanvas ? new OffscreenCanvas(w, h) : document.createElement("canvas");
+  off.width = w; off.height = h;
+  const octx = off.getContext("2d", { willReadFrequently: true });
+  const id = octx.createImageData(w, h);
+  const buf = id.data;
+  for (let i=0;i<buf.length;i+=4){
+    const v = Math.random()*255;
+    buf[i]=buf[i+1]=buf[i+2]=v;
+    buf[i+3]=255;
+  }
+  octx.putImageData(id,0,0);
+  fxCtx.globalAlpha = alpha;
+  fxCtx.imageSmoothingEnabled = false;
+  fxCtx.drawImage(off, 0, 0, w, h, 0, 0, fxCanvas.width, fxCanvas.height);
+  fxCtx.globalAlpha = 1;
+}
+function drawScanlines(){
+  const h = fxCanvas.height, w = fxCanvas.width;
+  fxCtx.globalAlpha = 0.18;
+  fxCtx.fillStyle = "#000";
+  const step = Math.max(2, Math.round(2*fxDPR));
+  for (let y=0; y<h; y+=step){
+    fxCtx.fillRect(0, y, w, 1);
+  }
+  fxCtx.globalAlpha = 1;
+}
+function drawTearGlitch(){
+  // пара горизонтальных полос, чуть смещённых по X
+  const h = fxCanvas.height, w = fxCanvas.width;
+  const bands = randInt(1,3);
+  for (let i=0;i<bands;i++){
+    const y = randInt(0, h-40);
+    const bh = randInt(8*fxDPR, 22*fxDPR);
+    const dx = randInt(-20*fxDPR, 20*fxDPR);
+    fxCtx.globalCompositeOperation = "source-over";
+    const img = fxCtx.getImageData(0, y, w, bh);
+    fxCtx.putImageData(img, dx, y);
+  }
+}
+async function playFxCRT(durationMs){
+  ensureFxCanvas();
+  if (fxActive) return;
+  fxActive = true;
+  fxCanvas.classList.add("visible");
+  clearFx();
+
+  const t0 = performance.now();
+  let lastT = t0;
+
+  function frame(t){
+    const dt = t - lastT;
+    lastT = t;
+    clearFx();
+
+    // 1) зернистый блоковый шум (эмитирует пикселизацию)
+    drawNoiseBlocky(0.22);
+
+    // 2) редкие «разрывы» (tearing)
+    if (Math.random() < 0.35) drawTearGlitch();
+
+    // 3) скан-линии CRT
+    drawScanlines();
+
+    if (t - t0 < durationMs){
+      requestAnimationFrame(frame);
+    } else {
+      fxCanvas.classList.remove("visible");
+      clearFx();
+      fxActive = false;
+    }
+  }
+  // плавный fade-in canvas через CSS
+  requestAnimationFrame(frame);
 }
 async function maybeFx(){
   if (!state.settings.fxEnabled) return;
   const chance = Number(state.settings.fxChance||0);
-  if (Math.random()*100 <= chance){ await playFx(); }
+  if (Math.random()*100 <= chance){
+    const dur = randInt(400, 800);
+    await playFxCRT(dur);
+  }
 }
 
-// Scene render
+// ===== Scene render
 async function renderScene(key){
   const sc = state.scenes[key];
   if (!sc) return;
@@ -549,7 +645,7 @@ async function renderScene(key){
   await maybeFx(); // эффекты перед сменой
 
   if (sc.image){
-    await blink(220);
+    await blink(200);
     setBackground(sc.image, { fit: sc.fit, focus: sc.focus });
   }
 
@@ -569,7 +665,7 @@ async function renderScene(key){
       if (state.typing) return; // блокируем клики во время набора
       saveLocal();
       send("choice_made", { from:key, to:opt.next, label:opt.label });
-      await sleep(120);
+      await sleep(100);
       renderScene(opt.next);
     };
     $opts.appendChild(b);
@@ -580,7 +676,7 @@ async function renderScene(key){
   send("scene_enter", { scene:key });
 }
 
-// Heartbeat
+// ===== Heartbeat
 let hb = null;
 function startHeartbeat(){
   if (hb) clearInterval(hb);
@@ -591,7 +687,7 @@ function startHeartbeat(){
   }, HEARTBEAT_MS);
 }
 
-// Init
+// ===== Init
 (async function init(){
   try{
     const oldBuild = Number(localStorage.getItem(LS_BUILD)||"0");
