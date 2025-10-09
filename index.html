@@ -1,87 +1,86 @@
 <!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Raf game</title>
-
-  <link rel="preconnect" href="https://telegram.org" />
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Raf game</title>
+<link rel="preconnect" href="https://telegram.org" />
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body class="booting">
-  <div id="app">
-    <div class="stage" id="stage">
-      <!-- Левая платформа: фон + текст -->
-      <div class="pane">
-        <div class="card glass glass--panel" id="desc">
-          <span class="glass__lens" aria-hidden="true"></span>
-          <img id="bgImg" alt="" />
-          <div class="text"><span id="descText">Загрузка…</span></div>
+<div id="app">
+  <div class="stage" id="stage">
+    <!-- Левая платформа: фон + текст -->
+    <div class="pane">
+      <div class="card glass glass--panel" id="desc">
+        <span class="glass__lens" aria-hidden="true"></span>
+        <img id="bgImg" alt="" />
+        <div class="text"><span id="descText">Загрузка…</span></div>
 
-          <!-- HUD -->
-          <div class="hudbar glass glass--hud">
-            <div class="timer" id="timer">00:00</div>
-            <button id="menuBtn" class="hud-menu glass glass--btn" aria-label="Меню" title="Меню">≡</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Правая колонка: варианты -->
-      <div class="pane">
-        <div class="card glass glass--panel">
-          <span class="glass__lens" aria-hidden="true"></span>
-          <div class="stack" id="options"></div>
+        <!-- HUD -->
+        <div class="hudbar glass glass--hud">
+          <div class="timer" id="timer">00:00</div>
+          <button id="menuBtn" class="hud-menu glass glass--btn" aria-label="Меню" title="Меню">≡</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Экран загрузки -->
-  <div id="boot" class="boot" aria-live="polite">
-    <div class="boot-box glass glass--panel">
-      <span class="glass__lens" aria-hidden="true"></span>
-      <div class="boot-title">Готовлю фон…</div>
-      <div class="boot-progress"><div id="bootBar"></div></div>
-      <div class="boot-meta">
-        <span id="bootPct">0%</span><span>·</span><span id="bootCount">0/0</span>
+    <!-- Правая колонка: варианты -->
+    <div class="pane">
+      <div class="card glass glass--panel">
+        <span class="glass__lens" aria-hidden="true"></span>
+        <div class="stack" id="options"></div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- «Веки» -->
-  <div class="eyelid top" id="eyelidTop"></div>
-  <div class="eyelid bot" id="eyelidBot"></div>
-
-  <!-- Диалоги -->
-  <dialog id="invDlg" class="glass glass--panel">
+<!-- Экран загрузки -->
+<div id="boot" class="boot" aria-live="polite">
+  <div class="boot-box glass glass--panel">
     <span class="glass__lens" aria-hidden="true"></span>
-    <button class="close glass glass--btn" id="invClose" aria-label="Закрыть">✕</button>
-    <div class="dlg-body">
-      <h3>Инвентарь</h3>
-      <div id="invList" class="list"></div>
+    <div class="boot-title">Готовлю фон…</div>
+    <div class="boot-progress"><div id="bootBar"></div></div>
+    <div class="boot-meta">
+      <span id="bootPct">0%</span><span>·</span><span id="bootCount">0/0</span>
     </div>
-  </dialog>
+  </div>
+</div>
 
-  <dialog id="flagsDlg" class="glass glass--panel">
+<!-- «Веки» -->
+<div class="eyelid top" id="eyelidTop"></div>
+<div class="eyelid bot" id="eyelidBot"></div>
+
+<!-- Диалоги -->
+<dialog id="invDlg" class="glass glass--panel">
+  <span class="glass__lens" aria-hidden="true"></span>
+  <button class="close glass glass--btn" id="invClose" aria-label="Закрыть">✕</button>
+  <div class="dlg-body">
+    <h3>Инвентарь</h3>
+    <div id="invList" class="list"></div>
+  </div>
+</dialog>
+
+<dialog id="flagsDlg" class="glass glass--panel">
+  <span class="glass__lens" aria-hidden="true"></span>
+  <button class="close glass glass--btn" id="flagsClose" aria-label="Закрыть">✕</button>
+  <div class="dlg-body">
+    <h3>Флаги</h3>
+    <div id="flagsList" class="list"></div>
+  </div>
+</dialog>
+
+<!-- ГЛАВНОЕ ОВЕРЛЕЙ -->
+<div id="overlay" class="overlay hidden">
+  <!-- Главное меню -->
+  <div id="menuPanel" class="panel main glass glass--panel hidden">
     <span class="glass__lens" aria-hidden="true"></span>
-    <button class="close glass glass--btn" id="flagsClose" aria-label="Закрыть">✕</button>
-    <div class="dlg-body">
-      <h3>Флаги</h3>
-      <div id="flagsList" class="list"></div>
-    </div>
-  </dialog>
 
-  <!-- ГЛАВНОЕ ОВЕРЛЕЙ -->
-  <div id="overlay" class="overlay hidden">
-    <!-- Главное меню -->
-    <div id="menuPanel" class="panel main glass glass--panel hidden">
-      <span class="glass__lens" aria-hidden="true"></span>
-
-      <!-- Винтажная вывеска Raf Game -->
-      <div class="marquee">
-        <svg id="rafLogo" viewBox="0 0 1000 230" aria-label="Raf Game">
+    <!-- Винтажная вывеска Raf Game (wrapper для DOM-ламп) -->
+    <div class="marquee">
+      <div id="lampSign" class="lamp-sign" aria-hidden="true">
+        <svg id="rafLogo" viewBox="0 0 1000 230" aria-label="Raf Game" preserveAspectRatio="xMidYMid meet">
           <defs>
             <filter id="bulbGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2.2" result="g1"/>
@@ -91,13 +90,13 @@
               </feMerge>
             </filter>
             <radialGradient id="bulbRad" cx="50%" cy="50%" r="60%">
-              <stop offset="0%"  stop-color="#fff4d0"/>
+              <stop offset="0%" stop-color="#fff4d0"/>
               <stop offset="38%" stop-color="#ffd79a"/>
               <stop offset="100%" stop-color="#f2a44a"/>
             </radialGradient>
           </defs>
-
           <g transform="translate(0,8)">
+            <!-- SVG letters unchanged -->
             <g class="letter" data-letter="R" transform="translate(90,40) rotate(-6)">
               <path class="metal" d="M0,0 L0,140 L38,140 L38,88 L72,88 C96,88 116,68 116,44 C116,20 96,0 72,0 Z M38,36 L38,52 L66,52 C73,52 80,46 80,44 C80,40 74,36 66,36 Z M38,88 L90,140 L120,140 L68,88 Z"/>
               <g class="bulbs" data-points="R"></g>
@@ -129,155 +128,155 @@
           </g>
         </svg>
       </div>
-
-      <div class="menu-col">
-        <button id="btnStart" class="cta glass glass--btn">Начать</button>
-        <button id="btnContinue" class="cta glass glass--btn ghost">Продолжить</button>
-      </div>
-      <div class="menu-bottom">
-        <button id="btnLeaderboard" class="round glass glass--btn" title="Лидерборд">🏆</button>
-        <button id="btnSettings" class="round glass glass--btn" title="Настройки">⚙️</button>
-      </div>
     </div>
 
-    <!-- Регистрация -->
-    <div id="regPanel" class="panel glass glass--panel hidden">
-      <span class="glass__lens" aria-hidden="true"></span>
-      <h2>Регистрация</h2>
-      <div class="form">
-        <label>Никнейм
-          <input id="regNick" class="glass glass--input" type="text" maxlength="24" placeholder="твой ник" />
-        </label>
-        <label>Тег в Telegram (с @)
-          <input id="regTag" class="glass glass--input" type="text" maxlength="32" placeholder="@kain2949" />
-        </label>
-        <label>Пол</label>
-        <div class="pill-row">
-          <button id="btnMale"   type="button" class="pill glass glass--btn active">Мужской</button>
-          <button id="btnFemale" type="button" class="pill glass glass--btn">Женский</button>
-        </div>
-        <div class="dual">
-          <button id="btnSendCode" class="btn glass glass--btn">Отправить код</button>
-          <input id="regCode" class="glass glass--input" type="text" inputmode="numeric" maxlength="6" placeholder="код из бота" />
-          <button id="btnVerify" class="btn quiet glass glass--btn">Подтвердить</button>
-        </div>
-        <div id="regMsg" class="muted">Пол женский — доступ запрещён навсегда.</div>
-      </div>
+    <div class="menu-col">
+      <button id="btnStart" class="cta glass glass--btn">Начать</button>
+      <button id="btnContinue" class="cta glass glass--btn ghost">Продолжить</button>
     </div>
 
-    <!-- Лидерборд -->
-    <div id="lbPanel" class="panel glass glass--panel hidden">
-      <span class="glass__lens" aria-hidden="true"></span>
-      <h2>Лидерборд</h2>
-      <div class="lb-list" id="lbList"></div>
-      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
-        <button class="btn quiet glass glass--btn" id="lbBack">Назад</button>
-      </div>
-    </div>
-
-    <!-- Настройки -->
-    <div id="settingsPanel" class="panel glass glass--panel hidden">
-      <span class="glass__lens" aria-hidden="true"></span>
-      <h2>Настройки</h2>
-      <div class="settings">
-        <label class="row">
-          <span>Эффекты-помехи при смене сцен</span>
-          <input id="fxEnable" type="checkbox" checked />
-        </label>
-        <label class="row">
-          <span>Шанс появления помех</span>
-          <input id="fxChance" type="range" min="0" max="100" step="1" value="50" />
-          <span id="fxChanceVal" class="val">50%</span>
-        </label>
-        <div style="display:flex; justify-content:flex-end; margin-top:12px;">
-          <button id="settingsBack" class="btn glass glass--btn quiet">Готово</button>
-        </div>
-      </div>
+    <div class="menu-bottom">
+      <button id="btnLeaderboard" class="round glass glass--btn" title="Лидерборд">🏆</button>
+      <button id="btnSettings" class="round glass glass--btn" title="Настройки">⚙️</button>
     </div>
   </div>
 
-  <!-- ВНУТРЕННЕЕ МЕНЮ -->
-  <div id="ingameOverlay" class="overlay hidden">
-    <div class="panel small glass glass--panel">
-      <span class="glass__lens" aria-hidden="true"></span>
-      <button class="close close-fixed glass glass--btn" id="gmClose" aria-label="Закрыть">✕</button>
-      <div class="vstack">
-        <button id="gmInventory" class="btn glass glass--btn">Инвентарь</button>
-        <button id="gmFlags" class="btn glass glass--btn">Флаги</button>
-        <button id="gmSaveExit" class="btn glass glass--btn warn">Сохранить и выйти в меню</button>
+  <!-- Регистрация -->
+  <div id="regPanel" class="panel glass glass--panel hidden">
+    <span class="glass__lens" aria-hidden="true"></span>
+    <h2>Регистрация</h2>
+    <div class="form">
+      <label>Никнейм
+        <input id="regNick" class="glass glass--input" type="text" maxlength="24" placeholder="твой ник" />
+      </label>
+      <label>Тег в Telegram (с @)
+        <input id="regTag" class="glass glass--input" type="text" maxlength="32" placeholder="@kain2949" />
+      </label>
+      <label>Пол</label>
+      <div class="pill-row">
+        <button id="btnMale" type="button" class="pill glass glass--btn active">Мужской</button>
+        <button id="btnFemale" type="button" class="pill glass glass--btn">Женский</button>
       </div>
+      <div class="dual">
+        <button id="btnSendCode" class="btn glass glass--btn">Отправить код</button>
+        <input id="regCode" class="glass glass--input" type="text" inputmode="numeric" maxlength="6" placeholder="код из бота" />
+        <button id="btnVerify" class="btn quiet glass glass--btn">Подтвердить</button>
+      </div>
+      <div id="regMsg" class="muted">Пол женский — доступ запрещён навсегда.</div>
     </div>
   </div>
 
-  <!-- ================= SVG-фильтр LQG (реалистичная линза) ================ -->
-  <svg class="fx-defs" width="0" height="0" aria-hidden="true">
-    <defs>
-      <!-- «линза»: мягкая рефракция, без геометрии текста -->
-      <filter id="glass-distortion" x="-20%" y="-20%" width="140%" height="140%" filterUnits="objectBoundingBox">
-        <!-- шум для микроволн (по умолчанию статичен) -->
-        <feTurbulence id="lqgNoise" type="fractalNoise" baseFrequency="0.006 0.008" numOctaves="2" seed="7" result="noise"/>
-        <feGaussianBlur in="noise" stdDeviation="2" result="softNoise"/>
-        <!-- карта смещения (X из R, Y из B) -->
-        <feComponentTransfer in="softNoise" result="map">
-          <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5"/>
-          <feFuncG type="gamma" amplitude="0" exponent="1" offset="0"/>
-          <feFuncB type="gamma" amplitude="1" exponent="10" offset="0.5"/>
-        </feComponentTransfer>
-        <!-- лёгкий specular — блик на изгибе -->
-        <feSpecularLighting in="map" surfaceScale="5" specularConstant="0.9" specularExponent="60" lighting-color="#ffffff" result="spec">
-          <fePointLight x="-220" y="-180" z="260"/>
-        </feSpecularLighting>
-        <feComposite in="spec" operator="arithmetic" k2="1" k3="1" result="lit"/>
-        <!-- смещение видимого слоя линзы -->
-        <feDisplacementMap in="SourceGraphic" in2="map" scale="60" xChannelSelector="R" yChannelSelector="B"/>
-      </filter>
-    </defs>
-  </svg>
+  <!-- Лидерборд -->
+  <div id="lbPanel" class="panel glass glass--panel hidden">
+    <span class="glass__lens" aria-hidden="true"></span>
+    <h2>Лидерборд</h2>
+    <div class="lb-list" id="lbList"></div>
+    <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+      <button class="btn quiet glass glass--btn" id="lbBack">Назад</button>
+    </div>
+  </div>
 
-  <!-- Генерация ламп в вывеске + перегорание -->
-  <script>
-  (function(){
-    const svg = document.getElementById('rafLogo');
-    if(!svg) return;
-    const patterns = {
-      R: [...Array.from({length:7},(_,i)=>[8,8+i*18]), ...Array.from({length:5},(_,i)=>[18+i*14,10]),
-          ...Array.from({length:6},(_,i)=>[74+Math.cos(-Math.PI/2+i*0.35)*26, 34+Math.sin(-Math.PI/2+i*0.35)*22]),
-          ...Array.from({length:3},(_,i)=>[40+i*12,88]), ...Array.from({length:5},(_,i)=>[58+i*12,96+i*9])],
-      A: [...Array.from({length:7},(_,i)=>[16,20+i*16]), ...Array.from({length:7},(_,i)=>[104,20+i*16]),
-          [60,8],[48,28],[72,28], ...Array.from({length:5},(_,i)=>[44+i*20,86])],
-      F: [...Array.from({length:8},(_,i)=>[10,8+i*16]), ...Array.from({length:6},(_,i)=>[20+i*16,12]), ...Array.from({length:6},(_,i)=>[20+i*16,56])],
-      G: [...Array.from({length:12},(_,i)=>[72+Math.cos(i/12*2*Math.PI)*40, 72+Math.sin(i/12*2*Math.PI)*34]), [112,72],[120,72],[128,72]],
-      M: [...Array.from({length:8},(_,i)=>[12,12+i*16]), ...Array.from({length:8},(_,i)=>[108,12+i*16]), [40,12],[60,52],[80,12],[60,80]],
-      E: [...Array.from({length:8},(_,i)=>[12,8+i*16]), ...Array.from({length:6},(_,i)=>[22+i*16,12]),
-          ...Array.from({length:6},(_,i)=>[22+i*16,56]), ...Array.from({length:6},(_,i)=>[22+i*16,108])]
-    };
-    svg.querySelectorAll('.letter .bulbs').forEach(g=>{
-      const pts = patterns[g.getAttribute('data-points')] || [];
-      pts.forEach(([x,y])=>{
-        const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
-        c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r',6.5);
-        c.setAttribute('class','bulb on');
-        g.appendChild(c);
-      });
-    });
-    const bulbs = Array.from(svg.querySelectorAll('.bulb'));
-    setInterval(()=>{
-      bulbs.forEach(b=>{
-        if(b.classList.contains('dead')) return;
-        if(Math.random()<0.05){
-          b.classList.add('dead');
-          setTimeout(()=>b.classList.remove('dead'), 1000*(1+Math.floor(Math.random()*5)));
-        }
-      });
-    },1000);
+  <!-- Настройки -->
+  <div id="settingsPanel" class="panel glass glass--panel hidden">
+    <span class="glass__lens" aria-hidden="true"></span>
+    <h2>Настройки</h2>
+    <div class="settings">
+      <label class="row">
+        <span>Эффекты-помехи при смене сцен</span>
+        <input id="fxEnable" type="checkbox" checked />
+      </label>
+      <label class="row">
+        <span>Шанс появления помех</span>
+        <input id="fxChance" type="range" min="0" max="100" step="1" value="50" />
+        <span id="fxChanceVal" class="val">50%</span>
+      </label>
+      <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+        <button id="settingsBack" class="btn glass glass--btn quiet">Готово</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    // если захочешь «живость» стекла — раскомментируй ниже (сейчас OFF)
-    const turb = document.getElementById('lqgNoise');
-    let t=0; (function loop(){ t+=0.012; const f1=0.006+Math.sin(t*.7)*0.0025; const f2=0.008+Math.cos(t*.9)*0.0025;
-    turb.setAttribute('baseFrequency', `${f1} ${f2}`); requestAnimationFrame(loop); })();
-  })();
-  </script>
+<!-- ВНУТРЕННЕЕ МЕНЮ -->
+<div id="ingameOverlay" class="overlay hidden">
+  <div class="panel small glass glass--panel">
+    <span class="glass__lens" aria-hidden="true"></span>
+    <button class="close close-fixed glass glass--btn" id="gmClose" aria-label="Закрыть">✕</button>
+    <div class="vstack">
+      <button id="gmInventory" class="btn glass glass--btn">Инвентарь</button>
+      <button id="gmFlags" class="btn glass glass--btn">Флаги</button>
+      <button id="gmSaveExit" class="btn glass glass--btn warn">Сохранить и выйти в меню</button>
+    </div>
+  </div>
+</div>
 
-  <script src="app.js"></script>
+<!-- SVG-фильтр LQG (реалистичная линза) -->
+<svg class="fx-defs" width="0" height="0" aria-hidden="true">
+  <defs>
+    <filter id="glass-distortion" x="-30%" y="-30%" width="160%" height="160%" filterUnits="objectBoundingBox">
+      <feTurbulence id="lqgNoise" type="fractalNoise" baseFrequency="0.006 0.008" numOctaves="1" seed="7" result="noise"/>
+      <feGaussianBlur in="noise" stdDeviation="1.6" result="softNoise"/>
+      <feComponentTransfer in="softNoise" result="map">
+        <feFuncR type="gamma" amplitude="1" exponent="6" offset="0.48"/>
+        <feFuncG type="gamma" amplitude="0" exponent="1" offset="0"/>
+        <feFuncB type="gamma" amplitude="1" exponent="6" offset="0.48"/>
+      </feComponentTransfer>
+      <feSpecularLighting in="map" surfaceScale="4" specularConstant="0.8" specularExponent="40" lighting-color="#ffffff" result="spec">
+        <fePointLight x="-180" y="-140" z="200"/>
+      </feSpecularLighting>
+      <feMerge>
+        <feMergeNode in="spec"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+      <feDisplacementMap id="lqgDisp" in="SourceGraphic" in2="map" scale="28" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Генерация ламп в вывеске + перегорание -->
+<script>
+(function(){
+const svg = document.getElementById('rafLogo');
+if(!svg) return;
+const patterns = {
+  R: [...Array.from({length:7},(_,i)=>[8,8+i*18]), ...Array.from({length:5},(_,i)=>[18+i*14,10]),
+    ...Array.from({length:6},(_,i)=>[74+Math.cos(-Math.PI/2+i*0.35)*26, 34+Math.sin(-Math.PI/2+i*0.35)*22]),
+    ...Array.from({length:3},(_,i)=>[40+i*12,88]), ...Array.from({length:5},(_,i)=>[58+i*12,96+i*9])],
+  A: [...Array.from({length:7},(_,i)=>[16,20+i*16]), ...Array.from({length:7},(_,i)=>[104,20+i*16]),
+    [60,8],[48,28],[72,28], ...Array.from({length:5},(_,i)=>[44+i*20,86])],
+  F: [...Array.from({length:8},(_,i)=>[10,8+i*16]), ...Array.from({length:6},(_,i)=>[20+i*16,12]), ...Array.from({length:6},(_,i)=>[20+i*16,56])],
+  G: [...Array.from({length:12},(_,i)=>[72+Math.cos(i/12*2*Math.PI)*40, 72+Math.sin(i/12*2*Math.PI)*34]), [112,72],[120,72],[128,72]],
+  M: [...Array.from({length:8},(_,i)=>[12,12+i*16]), ...Array.from({length:8},(_,i)=>[108,12+i*16]), [40,12],[60,52],[80,12],[60,80]],
+  E: [...Array.from({length:8},(_,i)=>[12,8+i*16]), ...Array.from({length:6},(_,i)=>[22+i*16,12]),
+    ...Array.from({length:6},(_,i)=>[22+i*16,56]), ...Array.from({length:6},(_,i)=>[22+i*16,108])]
+};
+svg.querySelectorAll('.letter .bulbs').forEach(g=>{
+  const pts = patterns[g.getAttribute('data-points')] || [];
+  pts.forEach(([x,y])=>{
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',x); c.setAttribute('cy',y); c.setAttribute('r',6.5);
+    c.setAttribute('class','bulb on');
+    g.appendChild(c);
+  });
+});
+const bulbs = Array.from(svg.querySelectorAll('.bulb'));
+setInterval(()=>{
+  bulbs.forEach(b=>{
+    if(b.classList.contains('dead')) return;
+    if(Math.random()<0.05){
+      b.classList.add('dead');
+      setTimeout(()=>b.classList.remove('dead'), 1000*(1+Math.floor(Math.random()*5)));
+    }
+  });
+},1000);
+
+// включить живость стекла (омеренно)
+const turb = document.getElementById('lqgNoise');
+let t=0; (function loop(){ t+=0.012; const f1=0.006+Math.sin(t*.7)*0.002; const f2=0.008+Math.cos(t*.9)*0.002;
+turb.setAttribute('baseFrequency', `${f1} ${f2}`); requestAnimationFrame(loop); })();
+})();
+</script>
+
+<script src="app.js"></script>
 </body>
 </html>

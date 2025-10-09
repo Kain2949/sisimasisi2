@@ -1,6 +1,7 @@
 /* Raf game — WebApp (сцены из scenes.json)
    build: noir + liquid glass + bulbs sign
 */
+
 const APP_BUILD = 13;
 
 // Telegram
@@ -15,8 +16,7 @@ if (tg) {
 
 // === API конфиг ===
 const API_BASE = "https://kristan-labored-earsplittingly.ngrok-free.dev";
-const API_KEY  = "super_secret_key_3481gfej83f";
-
+const API_KEY = "super_secret_key_3481gfej83f";
 async function api(path, body) {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "POST",
@@ -42,81 +42,76 @@ async function apiSubmitLB(tag, nickname, elapsed){
 }
 
 // DOM
-const $descText    = document.getElementById("descText");
-const $bgImg       = document.getElementById("bgImg");
-const $opts        = document.getElementById("options");
-
-const $bootBar     = document.getElementById("bootBar");
-const $bootPct     = document.getElementById("bootPct");
-const $bootCnt     = document.getElementById("bootCount");
-
-const $eyetop      = document.getElementById("eyelidTop");
-const $eyebot      = document.getElementById("eyelidBot");
-
-const $timer       = document.getElementById("timer");
-const $menuBtn     = document.getElementById("menuBtn");
+const $descText = document.getElementById("descText");
+const $bgImg = document.getElementById("bgImg");
+const $opts = document.getElementById("options");
+const $bootBar = document.getElementById("bootBar");
+const $bootPct = document.getElementById("bootPct");
+const $bootCnt = document.getElementById("bootCount");
+const $eyetop = document.getElementById("eyelidTop");
+const $eyebot = document.getElementById("eyelidBot");
+const $timer = document.getElementById("timer");
+const $menuBtn = document.getElementById("menuBtn");
 
 // overlay
-const $overlay       = document.getElementById("overlay");
-const $menuPanel     = document.getElementById("menuPanel");
-const $regPanel      = document.getElementById("regPanel");
-const $lbPanel       = document.getElementById("lbPanel");
+const $overlay = document.getElementById("overlay");
+const $menuPanel = document.getElementById("menuPanel");
+const $regPanel = document.getElementById("regPanel");
+const $lbPanel = document.getElementById("lbPanel");
 const $settingsPanel = document.getElementById("settingsPanel");
-
-const $btnStart    = document.getElementById("btnStart");
+const $btnStart = document.getElementById("btnStart");
 const $btnContinue = document.getElementById("btnContinue");
 const $btnSettings = document.getElementById("btnSettings");
 const $btnLeaderboard = document.getElementById("btnLeaderboard");
 
 // registration
-const $regNick     = document.getElementById("regNick");
-const $regTag      = document.getElementById("regTag");
-const $regMsg      = document.getElementById("regMsg");
+const $regNick = document.getElementById("regNick");
+const $regTag = document.getElementById("regTag");
+const $regMsg = document.getElementById("regMsg");
+
 // gender pills
-const $btnMale     = document.getElementById("btnMale");
-const $btnFemale   = document.getElementById("btnFemale");
+const $btnMale = document.getElementById("btnMale");
+const $btnFemale = document.getElementById("btnFemale");
 
 // verify
 const $btnSendCode = document.getElementById("btnSendCode");
-const $regCode     = document.getElementById("regCode");
-const $btnVerify   = document.getElementById("btnVerify");
+const $regCode = document.getElementById("regCode");
+const $btnVerify = document.getElementById("btnVerify");
 
 // leaderboard
-const $lbList      = document.getElementById("lbList");
-const $lbBack      = document.getElementById("lbBack");
+const $lbList = document.getElementById("lbList");
+const $lbBack = document.getElementById("lbBack");
 
 // settings
-const $fxEnable    = document.getElementById("fxEnable");
-const $fxChance    = document.getElementById("fxChance");
+const $fxEnable = document.getElementById("fxEnable");
+const $fxChance = document.getElementById("fxChance");
 const $fxChanceVal = document.getElementById("fxChanceVal");
 const $settingsBack= document.getElementById("settingsBack");
 
 // ingame overlays / dialogs
 const $ingameOverlay = document.getElementById("ingameOverlay");
-const $gmInventory   = document.getElementById("gmInventory");
-const $gmFlags       = document.getElementById("gmFlags");
-const $gmSaveExit    = document.getElementById("gmSaveExit");
-const $gmClose       = document.getElementById("gmClose");
-const $invDlg        = document.getElementById("invDlg");
-const $flagsDlg      = document.getElementById("flagsDlg");
-const $invClose      = document.getElementById("invClose");
-const $flagsClose    = document.getElementById("flagsClose");
+const $gmInventory = document.getElementById("gmInventory");
+const $gmFlags = document.getElementById("gmFlags");
+const $gmSaveExit = document.getElementById("gmSaveExit");
+const $gmClose = document.getElementById("gmClose");
+const $invDlg = document.getElementById("invDlg");
+const $flagsDlg = document.getElementById("flagsDlg");
+const $invClose = document.getElementById("invClose");
+const $flagsClose = document.getElementById("flagsClose");
 
 // lamp sign container
 const $lampSign = document.getElementById("lampSign");
 
 // Config
-const IMG_BASE   = "images/";
+const IMG_BASE = "images/";
 const SCENES_URL = "scenes.json";
-
-const LS_SCENES   = "scenes_cache_v1";
-const LS_SAVE     = "game115";
-const LS_AUTH     = "auth115";
-const LS_BUILD    = "build115";
+const LS_SCENES = "scenes_cache_v1";
+const LS_SAVE = "game115";
+const LS_AUTH = "auth115";
+const LS_BUILD = "build115";
 const LS_SETTINGS = "settings115";
-
 const TYPEWRITE_MAX_MS = 3000;
-const HEARTBEAT_MS     = 15000;
+const HEARTBEAT_MS = 15000;
 
 // State
 const state = {
@@ -132,15 +127,14 @@ const state = {
   typing: false,
   auth: { verified:false, nickname:"", tag:"", gender:"m" },
   settings: { fxEnabled: true, fxChance: 50 },
-  bulbs: [] // для ламповой вывески
+  bulbs: []
 };
-
 const imageCache = {};
 let preloadDone = false;
 
 // ===== Utils
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-const send  = (event, payload) => { if (tg?.sendData) tg.sendData(JSON.stringify({ event, payload })); };
+const send = (event, payload) => { if (tg?.sendData) tg.sendData(JSON.stringify({ event, payload })); };
 const fmtTime = (sec) => `${String(Math.floor(sec/60)).padStart(2,"0")}:${String(Math.floor(sec%60)).padStart(2,"0")}`;
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
@@ -230,17 +224,13 @@ async function typewrite(node, text){
   const s = String(text||"");
   node.textContent = "";
   if (!s.length) return;
-
   state.typing = true;
   $opts.classList.add("hidden");
   const per = Math.max(10, Math.floor(TYPEWRITE_MAX_MS / s.length));
-
   for(let i=0;i<s.length;i++){
     node.textContent += s[i];
-    // eslint-disable-next-line no-await-in-loop
     await sleep(per);
   }
-
   state.typing = false;
   $opts.classList.remove("hidden");
 }
@@ -316,7 +306,7 @@ function loadSettings(){
   try{
     const s = JSON.parse(localStorage.getItem(LS_SETTINGS)||"{}");
     if (typeof s.fxEnabled === "boolean") state.settings.fxEnabled = s.fxEnabled;
-    if (typeof s.fxChance  === "number")  state.settings.fxChance  = clamp(s.fxChance, 0, 100);
+    if (typeof s.fxChance === "number") state.settings.fxChance = clamp(s.fxChance, 0, 100);
   }catch{}
   if ($fxEnable) $fxEnable.checked = !!state.settings.fxEnabled;
   if ($fxChance){
@@ -324,14 +314,8 @@ function loadSettings(){
     if ($fxChanceVal) $fxChanceVal.textContent = `${state.settings.fxChance}%`;
   }
 }
-$fxEnable?.addEventListener("change", () => {
-  state.settings.fxEnabled = $fxEnable.checked; saveSettings();
-});
-$fxChance?.addEventListener("input", () => {
-  state.settings.fxChance = Number($fxChance.value||"0");
-  if ($fxChanceVal) $fxChanceVal.textContent = `${state.settings.fxChance}%`;
-  saveSettings();
-});
+$fxEnable?.addEventListener("change", () => { state.settings.fxEnabled = $fxEnable.checked; saveSettings(); });
+$fxChance?.addEventListener("input", () => { state.settings.fxChance = Number($fxChance.value||"0"); if ($fxChanceVal) $fxChanceVal.textContent = `${state.settings.fxChance}%`; saveSettings(); });
 
 // ===== Overlay helpers
 function showOverlay(panel){
@@ -351,8 +335,8 @@ function openMainMenu(){
   showOverlay($menuPanel);
 }
 function openRegistration(){
-  $regNick.value   = state.auth.nickname||"";
-  $regTag.value    = state.auth.tag||"";
+  $regNick.value = state.auth.nickname||"";
+  $regTag.value = state.auth.tag||"";
   setGender(state.auth.gender||"m");
   $regMsg.textContent = "";
   showOverlay($regPanel);
@@ -374,6 +358,7 @@ function openLeaderboard(){
   }).catch(()=>{ $lbList.innerHTML = `<div class="muted">Ошибка сети</div>`; });
 }
 function openSettings(){ showOverlay($settingsPanel); }
+
 $btnSettings?.addEventListener("click", openSettings);
 $settingsBack?.addEventListener("click", openMainMenu);
 
@@ -417,19 +402,15 @@ $btnFemale?.addEventListener("click", () => setGender("f"));
 // ===== Registration via API
 let REG_ID = null;
 let REG_STATUS_TIMER = null;
-
 $btnSendCode?.addEventListener("click", async () => {
   const nickname = ($regNick.value||"").trim();
   let tag = ($regTag.value||"").trim();
   const gender = state.auth.gender || "m";
-
   if (!nickname || !tag){ $regMsg.textContent = "Укажи ник и тег."; return; }
   if (!tag.startsWith("@")) tag = "@"+tag;
-
   state.auth.nickname = nickname;
   state.auth.tag = tag;
   saveAuth();
-
   $regMsg.textContent = "Отправляю...";
   try{
     const resp = await api("/api/registration/start", { tag, nickname, gender });
@@ -437,13 +418,9 @@ $btnSendCode?.addEventListener("click", async () => {
       if (resp.reason === "already_verified"){
         state.auth.verified = true; saveAuth();
         $regMsg.textContent = "Ты уже верифицирован. Открываю меню…";
-        openMainMenu();
-        return;
+        openMainMenu(); return;
       }
-      if (resp.reason === "tag_must_start_with_at"){
-        $regMsg.textContent = "Тег должен начинаться с @.";
-        return;
-      }
+      if (resp.reason === "tag_must_start_with_at"){ $regMsg.textContent = "Тег должен начинаться с @."; return; }
       $regMsg.textContent = "Не получилось: " + (resp.reason || "ошибка");
       return;
     }
@@ -456,39 +433,23 @@ $btnSendCode?.addEventListener("click", async () => {
     $regMsg.textContent = "Сеть не отвечает.";
   }
 });
-
 async function checkRegStatus(){
   if (!REG_ID) return;
   try{
     const s = await apiStatus(REG_ID);
     if (!s.ok) return;
-
-    if (s.status === "code_sent"){
-      $regMsg.textContent = "Код отправлен в Telegram владельцу тега. Введи его ниже.";
-    } else if (s.status === "bad_tag"){
-      clearInterval(REG_STATUS_TIMER);
-      $regMsg.textContent = "Это не ваш тег. У бота нет чата с таким @.";
-    } else if (s.status === "cannot_message"){
-      clearInterval(REG_STATUS_TIMER);
-      $regMsg.textContent = "Бот не может написать этому пользователю.";
-    } else if (s.status === "expired"){
-      clearInterval(REG_STATUS_TIMER);
-      $regMsg.textContent = "Код протух. Отправь заново.";
-    } else if (s.status === "locked"){
-      clearInterval(REG_STATUS_TIMER);
-      $regMsg.textContent = "Много неверных попыток. Блок на час.";
-    } else if (s.status === "verified"){
-      clearInterval(REG_STATUS_TIMER);
-      $regMsg.textContent = "Готово. Верификация пройдена.";
-    }
+    if (s.status === "code_sent"){ $regMsg.textContent = "Код отправлен в Telegram владельцу тега. Введи его ниже."; }
+    else if (s.status === "bad_tag"){ clearInterval(REG_STATUS_TIMER); $regMsg.textContent = "Это не ваш тег. У бота нет чата с таким @."; }
+    else if (s.status === "cannot_message"){ clearInterval(REG_STATUS_TIMER); $regMsg.textContent = "Бот не может написать этому пользователю."; }
+    else if (s.status === "expired"){ clearInterval(REG_STATUS_TIMER); $regMsg.textContent = "Код протух. Отправь заново."; }
+    else if (s.status === "locked"){ clearInterval(REG_STATUS_TIMER); $regMsg.textContent = "Много неверных попыток. Блок на час."; }
+    else if (s.status === "verified"){ clearInterval(REG_STATUS_TIMER); $regMsg.textContent = "Готово. Верификация пройдена."; }
   }catch{}
 }
-
 $btnVerify?.addEventListener("click", async () => {
   if (!REG_ID){ $regMsg.textContent = "Сначала отправь код."; return; }
   const code = ($regCode.value||"").trim();
   if (!code || code.length !== 6){ $regMsg.textContent = "Введи 6 цифр."; return; }
-
   try{
     const resp = await api("/api/registration/verify", { reg_id: REG_ID, code });
     if (resp.ok){
@@ -497,17 +458,11 @@ $btnVerify?.addEventListener("click", async () => {
       $regMsg.textContent = "Верификация пройдена. Можно играть.";
       openMainMenu();
     } else {
-      if (resp.reason === "banned"){
-        $regMsg.textContent = "Пол женский — доступ запрещён навсегда.";
-      } else if (resp.reason === "bad_code"){
-        $regMsg.textContent = `Неверный код. Осталось попыток: ${resp.left}`;
-      } else if (resp.reason === "locked"){
-        $regMsg.textContent = "Блок на час за перебор неверных кодов.";
-      } else if (resp.reason === "expired"){
-        $regMsg.textContent = "Код истёк. Отправь заново.";
-      } else {
-        $regMsg.textContent = "Ошибка: " + (resp.reason || "неизвестная");
-      }
+      if (resp.reason === "banned"){ $regMsg.textContent = "Пол женский — доступ запрещён навсегда."; }
+      else if (resp.reason === "bad_code"){ $regMsg.textContent = `Неверный код. Осталось попыток: ${resp.left}`; }
+      else if (resp.reason === "locked"){ $regMsg.textContent = "Блок на час за перебор неверных кодов."; }
+      else if (resp.reason === "expired"){ $regMsg.textContent = "Код истёк. Отправь заново."; }
+      else { $regMsg.textContent = "Ошибка: " + (resp.reason || "неизвестная"); }
     }
   }catch(e){
     console.error(e);
@@ -534,12 +489,8 @@ $gmClose?.addEventListener("click", () => {
 });
 $gmInventory?.addEventListener("click", () => { renderInventory(); $invDlg?.showModal(); });
 $gmFlags?.addEventListener("click", () => { renderFlags(); $flagsDlg?.showModal(); });
-
-// дублируем закрытие (помимо HTML)
 $invClose?.addEventListener("click", () => $invDlg?.close());
 $flagsClose?.addEventListener("click", () => $flagsDlg?.close());
-
-// ESC закрывает открытый dialog
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     if ($invDlg?.open) $invDlg.close();
@@ -573,19 +524,16 @@ function ensureFxCanvas(){
   fxCtx = fxCanvas.getContext("2d");
   const resize = () => {
     fxDPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1.5));
-    fxCanvas.width  = Math.floor(window.innerWidth  * fxDPR);
+    fxCanvas.width = Math.floor(window.innerWidth * fxDPR);
     fxCanvas.height = Math.floor(window.innerHeight * fxDPR);
-    fxCanvas.style.width  = `${window.innerWidth}px`;
+    fxCanvas.style.width = `${window.innerWidth}px`;
     fxCanvas.style.height = `${window.innerHeight}px`;
     if (fxCtx) fxCtx.imageSmoothingEnabled = false;
   };
   resize();
   window.addEventListener("resize", resize);
 }
-function clearFx(){
-  if (!fxCtx) return;
-  fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height);
-}
+function clearFx(){ if (!fxCtx) return; fxCtx.clearRect(0,0,fxCanvas.width,fxCanvas.height); }
 function drawNoiseBlocky(alpha=0.22){
   const w = Math.max(96, Math.floor(fxCanvas.width / 14));
   const h = Math.max(64, Math.floor(fxCanvas.height/ 14));
@@ -631,14 +579,12 @@ async function playFxCRT(durationMs){
   fxActive = true;
   fxCanvas.classList.add("visible");
   clearFx();
-
   const t0 = performance.now();
   function frame(t){
     clearFx();
     drawNoiseBlocky(0.22);
     if (Math.random() < 0.35) drawTearGlitch();
     drawScanlines();
-
     if (t - t0 < durationMs){
       requestAnimationFrame(frame);
     } else {
@@ -663,17 +609,12 @@ async function renderScene(key){
   const sc = state.scenes[key];
   if (!sc) return;
   state.current = key;
-
-  // короткий эффект перед сменой
   await maybeFx();
-
   if (sc.image){
     await blink(200);
     setBackground(sc.image, { fit: sc.fit, focus: sc.focus });
   }
-
   await typewrite($descText, sc.description||"…");
-
   $opts.innerHTML = "";
   const options = normalizeOptions(sc);
   for (const opt of options){
@@ -693,7 +634,6 @@ async function renderScene(key){
     };
     $opts.appendChild(b);
   }
-
   saveLocal();
   startTimer();
   send("scene_enter", { scene:key });
@@ -711,84 +651,44 @@ function startHeartbeat(){
 }
 
 /* ================================
-   LAMP SIGN (Raf Game) — отдельные лампы
-   Каждая лампа:
-    - классы: .bulb, .on | .off | .dead
-    - каждую секунду 5% шанс погаснуть на 1–5 сек (если не dead)
-    - ~8% стартуют "dead" (не загораются вовсе)
-   Рендер: примитивные "каркасы" букв с набросом точек
-   и лёгкой дугой по слову (минимальное искривление).
+   LAMP SIGN (Raf Game) — DOM bulbs
 ================================ */
 function injectLampStyles(){
   const css = `
-  .lamp-sign.has-bulbs::after{ display:none; }
-  .lamp-sign{ position:relative; }
-  .lamp-sign .bulb{
-    position:absolute; width:10px; height:10px;
-    transform: translate(-50%,-50%);
-    border-radius:50%;
-    /* стекло */
-    background: radial-gradient(circle at 45% 40%, #ffdba0 0%, #7a4a1a 65%, #321c0b 100%);
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.06) inset,
-      0 2px 6px rgba(0,0,0,.6);
-    filter: saturate(1.1);
-  }
-  .lamp-sign .bulb .b-core{
-    position:absolute; inset:0;
-    border-radius:50%;
-    background: radial-gradient(circle at 50% 50%, rgba(255,210,120,.95) 0%, rgba(255,180,70,.65) 30%, rgba(255,160,40,.0) 65%);
-    opacity:.0; transition: opacity .14s ease;
-    mix-blend-mode: screen;
-  }
-  .lamp-sign .bulb .b-glow{
-    position:absolute; left:50%; top:50%; width:0; height:0;
-    pointer-events:none;
-    box-shadow:
-      0 0 18px 6px rgba(255,200,90,.85),
-      0 0 34px 12px rgba(255,200,90,.35);
-    opacity:0; transition: opacity .14s ease;
-  }
-  .lamp-sign .bulb .b-glass{
-    position:absolute; inset:0; border-radius:50%; pointer-events:none;
-    background:
-      radial-gradient(60% 60% at 30% 30%, rgba(255,255,255,.45), rgba(255,255,255,0) 60%),
-      radial-gradient(80% 80% at 70% 70%, rgba(255,255,255,.12), rgba(255,255,255,0) 70%);
-    mix-blend-mode: screen; opacity:.55;
-  }
-  .lamp-sign .bulb.on .b-core{ opacity:1; }
-  .lamp-sign .bulb.on .b-glow{ opacity:1; }
-  .lamp-sign .bulb.off{
-    filter: grayscale(.6) brightness(.65);
-  }
-  .lamp-sign .bulb.dead{
-    filter: grayscale(1) brightness(.35);
-    box-shadow: 0 1px 4px rgba(0,0,0,.7) inset;
-  }
-  /* лёгкий «живой» микрофликер у включённых (чтобы не были мёртвыми на взгляд) */
-  @keyframes microFlick {
-    0%,100% { opacity:1; filter:brightness(1) }
-    50% { opacity:.96; filter:brightness(.98) }
-  }
-  .lamp-sign .bulb.on { animation: microFlick 2.6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 27ms); }
-  `;
+.lamp-sign.has-bulbs::after{ display:none; }
+.lamp-sign{ position:relative; }
+.lamp-sign .bulb{
+position:absolute; width:10px; height:10px;
+transform: translate(-50%,-50%);
+border-radius:50%;
+background: radial-gradient(circle at 45% 40%, #ffdba0 0%, #7a4a1a 65%, #321c0b 100%);
+box-shadow:0 0 0 1px rgba(255,255,255,.06) inset,0 2px 6px rgba(0,0,0,.6);
+filter: saturate(1.1);
+}
+.lamp-sign .bulb .b-core{position:absolute; inset:0; border-radius:50%; background: radial-gradient(circle at 50% 50%, rgba(255,210,120,.95) 0%, rgba(255,180,70,.65) 30%, rgba(255,160,40,.0) 65%); opacity:.0; transition: opacity .14s ease; mix-blend-mode: screen;}
+.lamp-sign .bulb .b-glow{position:absolute; left:50%; top:50%; width:0; height:0; pointer-events:none; box-shadow:0 0 18px 6px rgba(255,200,90,.85), 0 0 34px 12px rgba(255,200,90,.35); opacity:0; transition: opacity .14s ease;}
+.lamp-sign .bulb .b-glass{position:absolute; inset:0; border-radius:50%; pointer-events:none; background: radial-gradient(60% 60% at 30% 30%, rgba(255,255,255,.45), rgba(255,255,255,0) 60%), radial-gradient(80% 80% at 70% 70%, rgba(255,255,255,.12), rgba(255,255,255,0) 70%); mix-blend-mode: screen; opacity:.55;}
+.lamp-sign .bulb.on .b-core{ opacity:1; }
+.lamp-sign .bulb.on .b-glow{ opacity:1; }
+.lamp-sign .bulb.off{ filter: grayscale(.6) brightness(.65); }
+.lamp-sign .bulb.dead{ filter: grayscale(1) brightness(.35); box-shadow: 0 1px 4px rgba(0,0,0,.7) inset; } 
+@keyframes microFlick { 0%,100% { opacity:1; filter:brightness(1) } 50% { opacity:.96; filter:brightness(.98) } }
+.lamp-sign .bulb.on { animation: microFlick 2.6s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 27ms); }
+`;
   const el = document.createElement("style");
   el.textContent = css;
   document.head.appendChild(el);
 }
 
-// простые «скелеты» букв (набор отрезков), координаты в системе 0..1 (по ширине/высоте буквы)
+// простые «скелеты» букв (координаты 0..1)
 const Letter = {
   R: [
-    // вертикаль слева
     [[0.05,0.05],[0.05,0.95]],
-    // верхняя дуга/горизонталь
     [[0.05,0.05],[0.65,0.05]],
     [[0.65,0.05],[0.75,0.15]],
     [[0.75,0.15],[0.75,0.42]],
     [[0.75,0.42],[0.65,0.50]],
     [[0.65,0.50],[0.05,0.50]],
-    // диагональ ноги
     [[0.05,0.50],[0.80,0.95]]
   ],
   A: [
@@ -809,7 +709,6 @@ const Letter = {
     [[0.10,0.75],[0.25,0.90]],
     [[0.25,0.90],[0.60,0.90]],
     [[0.60,0.90],[0.75,0.75]],
-    // «заход» внутрь
     [[0.40,0.58],[0.78,0.58]]
   ],
   M: [
@@ -824,10 +723,9 @@ const Letter = {
     [[0.10,0.50],[0.60,0.50]],
     [[0.10,0.95],[0.70,0.95]]
   ],
-  SPACE: [] // пробел
+  SPACE: []
 };
 
-// дискретизация отрезка точками через шаг
 function sampleSegment(p1, p2, stepPx, boxW, boxH){
   const [x1,y1] = p1, [x2,y2] = p2;
   const dx = (x2-x1)*boxW, dy=(y2-y1)*boxH;
@@ -841,14 +739,12 @@ function sampleSegment(p1, p2, stepPx, boxW, boxH){
   return out;
 }
 
-// создаём лампочку
 function createBulb(x, y, idx){
   const b = document.createElement("div");
   b.className = "bulb on";
   b.style.left = `${x}px`;
-  b.style.top  = `${y}px`;
+  b.style.top = `${y}px`;
   b.style.setProperty("--i", String(idx%200));
-
   const core = document.createElement("span"); core.className="b-core";
   const glow = document.createElement("span"); glow.className="b-glow";
   const glass= document.createElement("span"); glass.className="b-glass";
@@ -856,45 +752,34 @@ function createBulb(x, y, idx){
   return b;
 }
 
-// рендер вывески «Raf Game»
 function buildLampSign(){
   if (!$lampSign) return;
   injectLampStyles();
-
-  const text = "RAF GAME"; // верхний регистр для упрощения набора
+  const text = "RAF GAME";
   const rect = $lampSign.getBoundingClientRect();
   const W = rect.width || 640;
   const H = rect.height || 160;
-
-  // параметры
   const letterCount = 7;
-  const spacing = Math.max(10, Math.floor(W * 0.012)); // межбуквенный
+  const spacing = Math.max(10, Math.floor(W * 0.012));
   const letterW = Math.min((W - spacing*6) / letterCount, 86);
   const letterH = Math.min(H * 0.78, 120);
   const offsetY = (H - letterH)/2 + 6;
-
-  const step = Math.max(8, Math.floor(letterW/8)); // шаг ламп вдоль линий
-  const arcAmp = Math.min(18, H*0.12);             // высота дуги (мягкая)
-
+  const step = Math.max(8, Math.floor(letterW/8));
+  const arcAmp = Math.min(18, H*0.12);
   const map = { "R":"R", "A":"A", "F":"F", "G":"G", "M":"M", "E":"E", " ":"SPACE" };
-
   let xCursor = (W - (letterW*letterCount + spacing*6)) / 2;
   const bulbs = [];
-
   let idx=0;
   for (const ch of text){
     const key = map[ch] || "SPACE";
     if (key === "SPACE"){ xCursor += letterW + spacing; continue; }
-
     const segs = Letter[key];
     for (const seg of segs){
       const pts = sampleSegment(seg[0], seg[1], step, letterW, letterH);
       for (const [lx,ly] of pts){
         const gx = xCursor + lx;
-        // лёгкая дуга по всей надписи (минимальная)
         const rel = (gx / W) - 0.5;
         const gy = offsetY + ly - (arcAmp * (1 - Math.pow(rel*2, 2)) * 0.30);
-
         const el = createBulb(gx, gy, idx++);
         $lampSign.appendChild(el);
         bulbs.push({ el, state:"on", timer:null });
@@ -902,8 +787,6 @@ function buildLampSign(){
     }
     xCursor += letterW + spacing;
   }
-
-  // часть — «сгоревшие»
   const burnedPct = 0.08;
   bulbs.forEach(b=>{
     if (Math.random() < burnedPct){
@@ -911,12 +794,10 @@ function buildLampSign(){
       b.el.classList.remove("on"); b.el.classList.remove("off"); b.el.classList.add("dead");
     }
   });
-
-  // случайное выключение
   setInterval(() => {
     for (const b of bulbs){
       if (b.state === "dead" || b.state === "off") continue;
-      if (Math.random() < 0.05){ // 5% шанс/сек
+      if (Math.random() < 0.05){
         b.state = "off";
         b.el.classList.remove("on"); b.el.classList.add("off");
         const t = randInt(1000, 5000);
@@ -929,12 +810,49 @@ function buildLampSign(){
       }
     }
   }, 1000);
-
   $lampSign.classList.add("has-bulbs");
-  // убираем псевдотекст-плейсхолдер
   $lampSign.setAttribute("aria-label","");
   state.bulbs = bulbs;
 }
+
+// ===== Liquid glass breathing + cursor reaction (added)
+(function(){
+  const turb = document.getElementById('lqgNoise');
+  const disp = document.getElementById('lqgDisp');
+  if (!turb || !disp) return;
+  let t = 0;
+  function tick(){
+    t += 0.013;
+    const f1 = 0.006 + Math.sin(t * 0.68) * 0.0019;
+    const f2 = 0.008 + Math.cos(t * 0.92) * 0.0019;
+    turb.setAttribute('baseFrequency', `${f1} ${f2}`);
+    const base = 28;
+    const scale = Math.max(12, base + Math.sin(t * 0.9) * 6);
+    disp.setAttribute('scale', String(Math.round(scale)));
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  document.addEventListener('mousemove', e=>{
+    const x = e.clientX / window.innerWidth - 0.5;
+    const y = e.clientY / window.innerHeight - 0.5;
+    document.querySelectorAll('.glass__lens').forEach(L=>{
+      L.style.transform = `translate(${x*18}px, ${y*10}px) scale(${1 + Math.hypot(x,y)/4})`;
+    });
+  }, { passive:true });
+
+  // ensure lampSign exists (fallback)
+  if (!document.getElementById('lampSign')) {
+    const raf = document.getElementById('rafLogo');
+    if (raf && raf.parentElement) {
+      const wrapper = document.createElement('div');
+      wrapper.id = 'lampSign';
+      wrapper.className = 'lamp-sign';
+      raf.parentElement.replaceChild(wrapper, raf);
+      wrapper.appendChild(raf);
+    }
+  }
+})();
 
 // ===== Init
 (async function init(){
@@ -944,23 +862,19 @@ function buildLampSign(){
       localStorage.removeItem(LS_SAVE);
       localStorage.setItem(LS_BUILD, String(APP_BUILD));
     }
-
     state.scenes = await fetchScenes();
     const imgs = uniqueImages(state.scenes);
     fastPreload(imgs, progress);
-
     loadAuth();
     loadSettings();
     loadLocal();
     if (!state.startedAt) state.startedAt = new Date().toISOString();
-
     const t0 = Date.now();
     while (!preloadDone && Date.now()-t0 < 10000) await sleep(80);
-
     document.body.classList.remove("booting");
     document.body.classList.add("ready");
 
-    // построим ламповую вывеску
+    // build lamp sign (DOM bulbs)
     buildLampSign();
 
     if (state.auth.verified) openMainMenu();
